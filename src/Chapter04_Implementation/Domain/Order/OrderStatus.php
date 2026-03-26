@@ -8,6 +8,7 @@ final readonly class OrderStatus
 
     public static function pending(): self { return new self('pending'); }
     public static function confirmed(): self { return new self('confirmed'); }
+    public static function fromString(string $value): self { return new self($value); }
     public function value(): string { return $this->value; }
     public function isPending(): bool { return $this->value === 'pending'; }
 }

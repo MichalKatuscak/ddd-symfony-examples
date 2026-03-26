@@ -16,6 +16,8 @@ framework:
 
         buses:
             messenger.bus.default: []
+            messenger.bus.command: []
+            messenger.bus.query: []
 
         routing:
             Symfony\Component\Mailer\Messenger\SendEmailMessage: async

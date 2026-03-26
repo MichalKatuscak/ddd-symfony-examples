@@ -5,13 +5,17 @@ use App\Chapter05_CQRS\Application\PlaceOrder\PlaceOrderCommand;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Routing\Attribute\Route;
 
 final class Chapter05Controller extends AbstractController
 {
-    public function __construct(private readonly MessageBusInterface $bus) {}
+    public function __construct(
+        #[Target('messenger.bus.command')] private readonly MessageBusInterface $commandBus,
+        #[Target('messenger.bus.query')] private readonly MessageBusInterface $queryBus,
+    ) {}
 
     #[Route('/examples/cqrs', name: 'chapter05')]
     public function index(Request $request): Response
@@ -19,7 +23,7 @@ final class Chapter05Controller extends AbstractController
         $result = null;
 
         if ($request->isMethod('POST')) {
-            $envelope = $this->bus->dispatch(new PlaceOrderCommand(
+            $envelope = $this->commandBus->dispatch(new PlaceOrderCommand(
                 customerId: $request->request->get('customer', 'student-1'),
                 items: [[
                     'name' => $request->request->get('product', 'Produkt'),
@@ -31,7 +35,7 @@ final class Chapter05Controller extends AbstractController
             $result = 'Objednávka zadána přes Command bus. ID: ' . substr((string)$orderId, 0, 8) . '…';
         }
 
-        $envelope = $this->bus->dispatch(new GetOrdersQuery());
+        $envelope = $this->queryBus->dispatch(new GetOrdersQuery());
         $orders = $envelope->last(HandledStamp::class)?->getResult() ?? [];
 
         return $this->render('examples/chapter05/index.html.twig', [

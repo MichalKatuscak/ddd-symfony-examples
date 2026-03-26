@@ -30,11 +30,16 @@ final class DoctrineEventStore implements EventStoreInterface
         return array_map(function (StoredEvent $s) {
             $class = $s->eventClass();
             $payload = $s->payload();
-            $args = array_values($payload);
-            // occurredAt is stored as ISO string, reconstruct DateTimeImmutable
-            $last = end($args);
-            if (is_string($last) && \DateTimeImmutable::createFromFormat(\DateTimeInterface::ATOM, $last) !== false) {
-                $args[count($args) - 1] = new \DateTimeImmutable($last);
+            $ref = new \ReflectionClass($class);
+            $args = [];
+            foreach ($ref->getConstructor()->getParameters() as $param) {
+                $name = $param->getName();
+                $value = $payload[$name];
+                $type = $param->getType();
+                if ($type instanceof \ReflectionNamedType && $type->getName() === \DateTimeImmutable::class) {
+                    $value = new \DateTimeImmutable($value);
+                }
+                $args[$name] = $value;
             }
             return new $class(...$args);
         }, $stored);

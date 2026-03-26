@@ -48,7 +48,7 @@ class Order extends AggregateRoot
 
     public function id(): OrderId { return new OrderId($this->id); }
     public function customerId(): string { return $this->customerId; }
-    public function status(): OrderStatus { return OrderStatus::pending(); }
+    public function status(): OrderStatus { return OrderStatus::fromString($this->status); }
     public function total(): Money { return new Money($this->totalAmount, 'CZK'); }
     /** @return array<array{name: string, qty: int, price: int}> */
     public function items(): array { return $this->items; }
