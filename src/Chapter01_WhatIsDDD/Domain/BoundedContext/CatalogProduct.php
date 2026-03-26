@@ -1,7 +1,8 @@
 <?php
+
 namespace App\Chapter01_WhatIsDDD\Domain\BoundedContext;
 
-final class CatalogProduct
+final readonly class CatalogProduct
 {
     public function __construct(
         public readonly string $id,
