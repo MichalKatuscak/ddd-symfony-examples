@@ -1,7 +1,8 @@
 <?php
-
 namespace App\Chapter01_WhatIsDDD\UI;
 
+use App\Chapter01_WhatIsDDD\Domain\BoundedContext\CatalogProduct;
+use App\Chapter01_WhatIsDDD\Domain\BoundedContext\OrderProduct;
 use App\Chapter01_WhatIsDDD\Domain\Cart\Cart;
 use App\Chapter01_WhatIsDDD\Domain\Product\Price;
 use App\Chapter01_WhatIsDDD\Domain\Product\Product;
@@ -37,9 +38,26 @@ final class Chapter01Controller extends AbstractController
             }
         }
 
+        $catalogProduct = new CatalogProduct(
+            id: 'prod-42',
+            name: 'Symfony v praxi',
+            description: 'Kompletní průvodce frameworkem',
+            stockQty: 14,
+            weightKg: 0.45,
+        );
+
+        $orderProduct = new OrderProduct(
+            productId: 'prod-42',
+            unitPriceCents: 59900,
+            currency: 'CZK',
+            taxRate: 0.21,
+        );
+
         return $this->render('examples/chapter01/index.html.twig', [
             'products' => $products,
             'cart' => $cart,
+            'catalogProduct' => $catalogProduct,
+            'orderProduct' => $orderProduct,
         ]);
     }
 }

@@ -4,7 +4,7 @@
 <div class="container mt-4">
     <div class="alert alert-info">
         Tato ukázka patří ke kapitole
-        <a href="{{ path('what_is_ddd') }}"><strong>Co je Domain-Driven Design?</strong></a>
+        <a href="https://ddd-symfony.cz/co-je-ddd"><strong>Co je Domain-Driven Design?</strong></a>
     </div>
     <h1>Ukázka: Čistý doménový model</h1>
     <p>Nákupní košík bez databáze — čistá doménová logika v paměti.</p>
@@ -39,5 +39,76 @@
         <div class="card-footer text-end fw-bold">Celkem: {{ cart.total().formatted() }}</div>
     </div>
     {% endif %}
+
+    <hr class="my-5">
+    <h2>Bounded Context — stejná věc, jiný model</h2>
+    <p>Produkt <code>prod-42</code> existuje ve dvou kontextech. Každý kontext modeluje jen to, co potřebuje.</p>
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white"><strong>CatalogContext\Product</strong></div>
+                <div class="card-body">
+                    <p class="text-muted small mb-2">Zajímá ho co produkt <em>je</em> a zda je skladem.</p>
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                            <tr><th>id</th><td><code>{{ catalogProduct.id }}</code></td></tr>
+                            <tr><th>name</th><td>{{ catalogProduct.name }}</td></tr>
+                            <tr><th>description</th><td>{{ catalogProduct.description }}</td></tr>
+                            <tr><th>stockQty</th><td>{{ catalogProduct.stockQty }} ks</td></tr>
+                            <tr><th>weightKg</th><td>{{ catalogProduct.weightKg }} kg</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white"><strong>OrderContext\Product</strong></div>
+                <div class="card-body">
+                    <p class="text-muted small mb-2">Zajímá ho za kolik a s jakou daní se prodal.</p>
+                    <table class="table table-sm mb-0">
+                        <tbody>
+                            <tr><th>productId</th><td><code>{{ orderProduct.productId }}</code></td></tr>
+                            <tr><th>unitPriceCents</th><td>{{ orderProduct.unitPriceCents }}</td></tr>
+                            <tr><th>currency</th><td>{{ orderProduct.currency }}</td></tr>
+                            <tr><th>taxRate</th><td>{{ (orderProduct.taxRate * 100)|number_format(0) }} %</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <p class="text-muted mt-3"><small>Obě třídy nesou stejné <code>productId</code>, ale mají různé atributy — protože slouží různým účelům.</small></p>
+
+    <hr class="my-5">
+    <h2>Ubiquitous Language — stejný výraz, jiný význam</h2>
+    <p>Jazyk musí být shodný v rámci jednoho kontextu. Mezi kontexty se stejný výraz může lišit.</p>
+    <table class="table table-bordered">
+        <thead class="table-light">
+            <tr><th>Výraz</th><th>CatalogContext</th><th>OrderContext</th></tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Product</strong></td>
+                <td>Zboží s popisem, obrázky a skladem</td>
+                <td>Cenový snapshot v okamžiku nákupu</td>
+            </tr>
+            <tr>
+                <td><strong>Price</strong></td>
+                <td>Aktuální prodejní cena (může se měnit)</td>
+                <td>Zamčená cena z doby objednávky</td>
+            </tr>
+            <tr>
+                <td><strong>Customer</strong></td>
+                <td>Registrovaný uživatel s profilem</td>
+                <td>Fakturační a doručovací adresa</td>
+            </tr>
+            <tr>
+                <td><strong>Stock</strong></td>
+                <td>Počet kusů na skladě</td>
+                <td>Rezervace v okamžiku potvrzení objednávky</td>
+            </tr>
+        </tbody>
+    </table>
 </div>
 {% endblock %}
