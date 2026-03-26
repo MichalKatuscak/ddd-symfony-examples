@@ -1,0 +1,11 @@
+<?php
+namespace App\Chapter06_EventSourcing\Domain\Order\Events;
+use App\Shared\Domain\DomainEvent;
+final readonly class OrderConfirmed implements DomainEvent
+{
+    public function __construct(
+        public readonly string $orderId,
+        private readonly \DateTimeImmutable $occurredAt = new \DateTimeImmutable(),
+    ) {}
+    public function occurredAt(): \DateTimeImmutable { return $this->occurredAt; }
+}

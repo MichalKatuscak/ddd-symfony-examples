@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+{% block title %}Ukázka: Event Sourcing{% endblock %}
+{% block body %}
+<div class="container mt-4">
+    <div class="alert alert-info">
+        Tato ukázka patří ke kapitole
+        <a href="https://ddd-symfony.cz/event-sourcing"><strong>Event Sourcing v DDD a Symfony</strong></a>
+    </div>
+    <h1>Ukázka: Event Sourcing</h1>
+    <p>Stav objednávky není uložen jako řádek v DB — je <strong>rekonstruován z event logu</strong>.</p>
+
+    {% if result %}<div class="alert alert-success">{{ result }}</div>{% endif %}
+
+    <div class="row g-4">
+        <div class="col-md-5">
+            <h3>Akce</h3>
+            <form method="post" class="mb-3">
+                <input type="hidden" name="action" value="place">
+                <div class="mb-2"><input type="number" name="price" value="599" class="form-control" placeholder="Cena (CZK)"></div>
+                <button class="btn btn-primary w-100">1. Zadat objednávku (OrderPlaced)</button>
+            </form>
+            <p class="text-muted small">Po zadání zkopíruj ID z výsledku a vlož níže:</p>
+            <form method="post" class="mb-2">
+                <input type="hidden" name="action" value="confirm">
+                <div class="mb-2"><input type="text" name="order_id" value="{{ currentOrderId }}" class="form-control" placeholder="Order ID"></div>
+                <button class="btn btn-success w-100">2. Potvrdit (OrderConfirmed)</button>
+            </form>
+            <form method="post">
+                <input type="hidden" name="action" value="cancel">
+                <div class="mb-2"><input type="text" name="order_id" value="{{ currentOrderId }}" class="form-control" placeholder="Order ID"></div>
+                <button class="btn btn-warning w-100">3. Zrušit (OrderCancelled)</button>
+            </form>
+        </div>
+        <div class="col-md-7">
+            <h3>Event Log (EventStore)</h3>
+            {% if history is empty %}
+                <p class="text-muted">Zadej objednávku pro zobrazení event logu.</p>
+            {% else %}
+                <ol>
+                {% for event in history %}
+                    <li><code>{{ event|class_name }}</code> @ {{ event.occurredAt()|date('H:i:s') }}</li>
+                {% endfor %}
+                </ol>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
