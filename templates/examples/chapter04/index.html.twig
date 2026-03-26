@@ -41,5 +41,78 @@
             {% endif %}
         </div>
     </div>
+
+    <hr class="my-5">
+    <h2>Value Object — Money za kulisami</h2>
+    <p>Cena v agregátu není <code>int</code> — je to <code>Money</code> Value Object. Doctrine ho persistuje jako integer haléřů.</p>
+    <div class="row g-4">
+        <div class="col-md-6">
+            <pre class="bg-light p-3 rounded small">// V Order agregátu:
+private int $totalAmount; // haléře v DB
+
+public function total(): Money {
+    return new Money($this->totalAmount, 'CZK');
+}
+
+// Money Value Object:
+final readonly class Money {
+    public int $amount;    // haléře (int)
+    public string $currency;
+
+    public function formatted(): string {
+        return number_format($amount / 100, 2)
+            . ' ' . $currency;
+    }
+}</pre>
+        </div>
+        <div class="col-md-6">
+            <table class="table table-sm">
+                <thead><tr><th>Vrstva</th><th>Typ</th><th>Hodnota</th></tr></thead>
+                <tbody>
+                    <tr><td>Databáze</td><td><code>INTEGER</code></td><td><code>270000</code></td></tr>
+                    <tr><td>PHP (Money)</td><td><code>Money</code></td><td><code>Money(270000, 'CZK')</code></td></tr>
+                    <tr><td>Zobrazení</td><td><code>string</code></td><td><code>2 700,00 CZK</code></td></tr>
+                </tbody>
+            </table>
+            <p class="text-muted small">Money se nevyskytuje nikde jako <code>int</code> v doméně — type safety je garantována.</p>
+        </div>
+    </div>
+
+    <hr class="my-5">
+    <h2>Domain Events pipeline</h2>
+    <p>Po zadání objednávky agregát zvedne <code>OrderPlaced</code> event. Application layer ho vyzvedne přes <code>pullEvents()</code>.</p>
+
+    {% if dispatchedEvents %}
+        <div class="card border-warning mb-3">
+            <div class="card-header bg-warning"><strong>Dispatched Domain Events</strong></div>
+            <ul class="list-group list-group-flush">
+                {% for event in dispatchedEvents %}
+                <li class="list-group-item">
+                    <span class="badge bg-warning text-dark me-2">{{ event.class }}</span>
+                    <small class="text-muted">{{ event.occurredAt }}</small>
+                    <pre class="mt-1 mb-0 small bg-light p-1 rounded">{{ event.payload|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <div class="alert alert-light border">Zadej objednávku výše — event se zobrazí zde.</div>
+    {% endif %}
+
+    <pre class="bg-light p-3 rounded small">// Application layer (controller):
+$order = Order::place(...);
+$this->orders->save($order);           // persist
+
+$events = $order->pullEvents();        // ← vyzvedni eventy
+foreach ($events as $event) {
+    $this->eventDispatcher->dispatch($event); // ← zpracuj
+}
+
+// Event listener (např. posílání e-mailu, invalidace cache...)
+class OrderPlacedListener {
+    public function __invoke(OrderPlaced $event): void {
+        // $event->orderId, $event->customerId, $event->totalAmount
+    }
+}</pre>
 </div>
 {% endblock %}

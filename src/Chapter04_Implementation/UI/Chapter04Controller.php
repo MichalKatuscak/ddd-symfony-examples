@@ -23,6 +23,7 @@ final class Chapter04Controller extends AbstractController
     public function index(Request $request): Response
     {
         $result = null;
+        $dispatchedEvents = [];
 
         if ($request->isMethod('POST')) {
             $qty = max(1, (int) $request->request->get('qty', 1));
@@ -39,17 +40,33 @@ final class Chapter04Controller extends AbstractController
             );
             $this->orders->save($order);
 
-            $events = $order->pullEvents();
+            $rawEvents = $order->pullEvents();
+            $dispatchedEvents = array_map(function ($e) {
+                $ref = new \ReflectionClass($e);
+                $payload = [];
+                foreach ($ref->getProperties(\ReflectionProperty::IS_PUBLIC) as $prop) {
+                    $val = $prop->getValue($e);
+                    $payload[$prop->getName()] = $val instanceof \DateTimeImmutable
+                        ? $val->format('Y-m-d H:i:s')
+                        : $val;
+                }
+                return [
+                    'class' => $ref->getShortName(),
+                    'occurredAt' => $e->occurredAt()->format('H:i:s'),
+                    'payload' => $payload,
+                ];
+            }, $rawEvents);
+
             $result = sprintf(
-                'Objednávka uložena. Celkem: %s. Domain event: %s',
+                'Objednávka uložena. Celkem: %s.',
                 $order->total()->formatted(),
-                (new \ReflectionClass($events[0] ?? new \stdClass()))->getShortName(),
             );
         }
 
         return $this->render('examples/chapter04/index.html.twig', [
             'orders' => $this->orders->findAll(),
             'result' => $result,
+            'dispatchedEvents' => $dispatchedEvents,
         ]);
     }
 }
