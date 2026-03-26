@@ -1,0 +1,45 @@
+{% extends 'base.html.twig' %}
+{% block title %}Ukázka: Implementace DDD v Symfony{% endblock %}
+{% block body %}
+<div class="container mt-4">
+    <div class="alert alert-info">
+        Tato ukázka patří ke kapitole
+        <a href="https://ddd-symfony.cz/implementace-v-symfony"><strong>Implementace DDD v Symfony</strong></a>
+    </div>
+    <h1>Ukázka: Repository, Domain Service, Domain Event</h1>
+
+    {% if result %}<div class="alert alert-success">{{ result }}</div>{% endif %}
+
+    <div class="row g-4">
+        <div class="col-md-5">
+            <h3>Vytvořit objednávku</h3>
+            <form method="post">
+                <div class="mb-2"><input type="text" name="name" value="Symfony kurz" class="form-control" placeholder="Produkt"></div>
+                <div class="mb-2"><input type="number" name="qty" value="3" min="1" class="form-control" placeholder="Množství (≥3 = 10% sleva)"></div>
+                <div class="mb-2"><input type="number" name="price" value="1000" class="form-control" placeholder="Cena za kus (CZK)"></div>
+                <button class="btn btn-primary">Zadat objednávku</button>
+            </form>
+            <p class="text-muted mt-2"><small>OrderPricingService: 2+ ks = −5 %, 3+ ks = −10 %</small></p>
+        </div>
+        <div class="col-md-7">
+            <h3>Uložené objednávky (Doctrine + SQLite)</h3>
+            {% if orders is empty %}
+                <p class="text-muted">Zatím žádné objednávky.</p>
+            {% else %}
+                <table class="table table-sm">
+                    <thead><tr><th>ID</th><th>Zákazník</th><th>Celkem</th></tr></thead>
+                    <tbody>
+                    {% for order in orders %}
+                        <tr>
+                            <td><code>{{ order.id().value|slice(0,8) }}…</code></td>
+                            <td>{{ order.customerId() }}</td>
+                            <td>{{ order.total().formatted() }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

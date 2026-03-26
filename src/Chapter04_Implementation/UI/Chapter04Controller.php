@@ -1,0 +1,55 @@
+<?php
+
+namespace App\Chapter04_Implementation\UI;
+
+use App\Chapter04_Implementation\Domain\Order\Money;
+use App\Chapter04_Implementation\Domain\Order\Order;
+use App\Chapter04_Implementation\Domain\Order\OrderId;
+use App\Chapter04_Implementation\Domain\Repository\OrderRepositoryInterface;
+use App\Chapter04_Implementation\Domain\Service\OrderPricingService;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Attribute\Route;
+
+final class Chapter04Controller extends AbstractController
+{
+    public function __construct(
+        private readonly OrderRepositoryInterface $orders,
+        private readonly OrderPricingService $pricing,
+    ) {}
+
+    #[Route('/examples/implementace', name: 'chapter04')]
+    public function index(Request $request): Response
+    {
+        $result = null;
+
+        if ($request->isMethod('POST')) {
+            $qty = max(1, (int) $request->request->get('qty', 1));
+            $price = (int) ($request->request->get('price', 100) * 100);
+            $discountedPrice = $this->pricing->applyVolumeDiscount(
+                new Money($price, 'CZK'),
+                $qty,
+            );
+
+            $order = Order::place(
+                OrderId::generate(),
+                'student-' . rand(1, 99),
+                [['name' => $request->request->get('name', 'Produkt'), 'qty' => $qty, 'price' => $discountedPrice->amount]],
+            );
+            $this->orders->save($order);
+
+            $events = $order->pullEvents();
+            $result = sprintf(
+                'Objednávka uložena. Celkem: %s. Domain event: %s',
+                $order->total()->formatted(),
+                (new \ReflectionClass($events[0] ?? new \stdClass()))->getShortName(),
+            );
+        }
+
+        return $this->render('examples/chapter04/index.html.twig', [
+            'orders' => $this->orders->findAll(),
+            'result' => $result,
+        ]);
+    }
+}
