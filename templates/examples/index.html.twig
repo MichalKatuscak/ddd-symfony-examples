@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+{% block title %}Živé ukázky DDD v Symfony{% endblock %}
+{% block body %}
+<div class="container mt-4">
+    <h1>Živé ukázky DDD v Symfony</h1>
+    <p class="lead">Ke každé kapitole příručky <a href="https://ddd-symfony.cz">ddd-symfony.cz</a> patří spustitelná ukázka kódu.</p>
+
+    <div class="row g-4 mt-2">
+        {% for chapter in chapters %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <span class="badge bg-primary me-2">{{ chapter.num }}</span>
+                        {{ chapter.title }}
+                    </h5>
+                    <p class="card-text text-muted">{{ chapter.desc }}</p>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ path(chapter.route) }}" class="btn btn-primary btn-sm">Spustit ukázku</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
