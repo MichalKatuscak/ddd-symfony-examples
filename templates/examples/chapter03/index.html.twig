@@ -1,0 +1,39 @@
+{% extends 'base.html.twig' %}
+{% block title %}Ukázka: Základní koncepty DDD{% endblock %}
+{% block body %}
+<div class="container mt-4">
+    <div class="alert alert-info">
+        Tato ukázka patří ke kapitole
+        <a href="https://ddd-symfony.cz/zakladni-koncepty"><strong>Základní koncepty DDD</strong></a>
+    </div>
+    <h1>Ukázka: Entity, Value Objects, Agregát</h1>
+    <p>Objednávka jako agregát — chrání svá doménová invarianty.</p>
+
+    {% if result %}<div class="alert alert-success">{{ result }}</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <h3>Order.addItem()</h3>
+            <form method="post">
+                <input type="hidden" name="action" value="add_item">
+                <div class="mb-2"><input type="text" name="name" value="Symfony kniha" class="form-control" placeholder="Název produktu"></div>
+                <div class="mb-2"><input type="number" name="qty" value="2" min="1" class="form-control" placeholder="Množství"></div>
+                <div class="mb-2"><input type="number" name="price" value="599" class="form-control" placeholder="Cena (CZK)"></div>
+                <button class="btn btn-primary">Přidat položku</button>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <h3>Doménová pravidla</h3>
+            <form method="post" class="mb-2">
+                <input type="hidden" name="action" value="confirm_with_item">
+                <button class="btn btn-success w-100">Order.confirm() — úspěch</button>
+            </form>
+            <form method="post">
+                <input type="hidden" name="action" value="confirm_empty">
+                <button class="btn btn-warning w-100">Order.confirm() na prázdné → DomainException</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
