@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+{% block title %}Ukázka: Ságy a Process Managery{% endblock %}
+{% block body %}
+<div class="container mt-4">
+    <div class="alert alert-info">
+        Tato ukázka patří ke kapitole
+        <a href="https://ddd-symfony.cz/sagy-a-process-managery"><strong>Ságy a Process Managery</strong></a>
+    </div>
+    <h1>Ukázka: Orchestrační sága s kompenzacemi</h1>
+    <p>Sága řídí dlouhotrvající transakci přes více kroků. Při chybě spustí kompenzační akce.</p>
+
+    <form method="post" class="mb-4">
+        <div class="mb-3">
+            <label class="form-label">Sklad dostupný?</label>
+            <select name="stock" class="form-select" style="width:auto">
+                <option value="1">Ano</option>
+                <option value="0">Ne (sága selže v kroku 1)</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Platba úspěšná?</label>
+            <select name="payment" class="form-select" style="width:auto">
+                <option value="1">Ano</option>
+                <option value="0">Ne (sága selže v kroku 2, kompenzuje krok 1)</option>
+            </select>
+        </div>
+        <button class="btn btn-primary">Spustit ságu</button>
+    </form>
+
+    {% if log is not empty %}
+    <h3>Průběh ságy:</h3>
+    <ol>
+        {% for entry in log %}
+        <li class="{{ 'FAILED' in entry ? 'text-danger' : ('COMPENSATED' in entry ? 'text-warning' : 'text-success') }}">
+            {{ entry }}
+        </li>
+        {% endfor %}
+    </ol>
+    {% endif %}
+</div>
+{% endblock %}
