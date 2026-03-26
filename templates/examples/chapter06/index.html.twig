@@ -14,18 +14,18 @@
     <div class="row g-4">
         <div class="col-md-5">
             <h3>Akce</h3>
-            <form method="post" class="mb-3">
+            <form method="post" data-turbo="false" class="mb-3">
                 <input type="hidden" name="action" value="place">
                 <div class="mb-2"><input type="number" name="price" value="599" class="form-control" placeholder="Cena (CZK)"></div>
                 <button class="btn btn-primary w-100">1. Zadat objednávku (OrderPlaced)</button>
             </form>
             <p class="text-muted small">Po zadání zkopíruj ID z výsledku a vlož níže:</p>
-            <form method="post" class="mb-2">
+            <form method="post" data-turbo="false" class="mb-2">
                 <input type="hidden" name="action" value="confirm">
                 <div class="mb-2"><input type="text" name="order_id" value="{{ currentOrderId }}" class="form-control" placeholder="Order ID"></div>
                 <button class="btn btn-success w-100">2. Potvrdit (OrderConfirmed)</button>
             </form>
-            <form method="post">
+            <form method="post" data-turbo="false">
                 <input type="hidden" name="action" value="cancel">
                 <div class="mb-2"><input type="text" name="order_id" value="{{ currentOrderId }}" class="form-control" placeholder="Order ID"></div>
                 <button class="btn btn-warning w-100">3. Zrušit (OrderCancelled)</button>

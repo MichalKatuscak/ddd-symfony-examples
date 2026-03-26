@@ -15,7 +15,7 @@
     <div class="row g-4">
         <div class="col-md-6">
             <h3>Order.addItem()</h3>
-            <form method="post">
+            <form method="post" data-turbo="false">
                 <input type="hidden" name="action" value="add_item">
                 <div class="mb-2"><input type="text" name="name" value="Symfony kniha" class="form-control" placeholder="Název produktu"></div>
                 <div class="mb-2"><input type="number" name="qty" value="2" min="1" class="form-control" placeholder="Množství"></div>
@@ -25,11 +25,11 @@
         </div>
         <div class="col-md-6">
             <h3>Doménová pravidla</h3>
-            <form method="post" class="mb-2">
+            <form method="post" data-turbo="false" class="mb-2">
                 <input type="hidden" name="action" value="confirm_with_item">
                 <button class="btn btn-success w-100">Order.confirm() — úspěch</button>
             </form>
-            <form method="post">
+            <form method="post" data-turbo="false">
                 <input type="hidden" name="action" value="confirm_empty">
                 <button class="btn btn-warning w-100">Order.confirm() na prázdné → DomainException</button>
             </form>

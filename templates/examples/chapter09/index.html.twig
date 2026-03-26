@@ -29,11 +29,11 @@ $task->complete();          // in_progress → done
     </div>
 
     <div class="mt-4">
-        <form method="post" class="d-inline me-2">
+        <form method="post" data-turbo="false" class="d-inline me-2">
             <input type="hidden" name="action" value="valid">
             <button class="btn btn-success">Správný přechod (start → complete)</button>
         </form>
-        <form method="post" class="d-inline">
+        <form method="post" data-turbo="false" class="d-inline">
             <input type="hidden" name="action" value="invalid">
             <button class="btn btn-warning">Neplatný přechod (complete bez start) → DomainException</button>
         </form>
