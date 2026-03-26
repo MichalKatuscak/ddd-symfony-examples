@@ -24,3 +24,6 @@ services:
 
     App\Chapter04_Implementation\Domain\Repository\OrderRepositoryInterface:
         class: App\Chapter04_Implementation\Infrastructure\Persistence\DoctrineOrderRepository
+
+    App\Chapter05_CQRS\Domain\Repository\OrderRepositoryInterface:
+        class: App\Chapter05_CQRS\Infrastructure\Persistence\DoctrineOrderRepository
