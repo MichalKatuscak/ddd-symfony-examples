@@ -2,6 +2,8 @@
 
 namespace App\Chapter03_BasicConcepts\Domain\Order;
 
+use App\Chapter03_BasicConcepts\Domain\Order\Events\OrderConfirmed;
+use App\Chapter03_BasicConcepts\Domain\Order\Events\OrderItemAdded;
 use App\Shared\Domain\AggregateRoot;
 
 final class Order extends AggregateRoot
@@ -27,7 +29,14 @@ final class Order extends AggregateRoot
         if (!$this->status->isPending()) {
             throw new \DomainException('Cannot add items to a non-pending order');
         }
-        $this->items[] = new OrderItem($name, $qty, $unitPrice);
+        $item = new OrderItem($name, $qty, $unitPrice);
+        $this->items[] = $item;
+        $this->record(new OrderItemAdded(
+            orderId: $this->id->value,
+            productName: $name,
+            qty: $qty,
+            lineTotalCents: $item->lineTotal()->amount,
+        ));
     }
 
     public function confirm(): void
@@ -36,6 +45,10 @@ final class Order extends AggregateRoot
             throw new \DomainException('Cannot confirm an empty order');
         }
         $this->status = OrderStatus::confirmed();
+        $this->record(new OrderConfirmed(
+            orderId: $this->id->value,
+            totalAmount: $this->total()->amount,
+        ));
     }
 
     public function id(): OrderId { return $this->id; }

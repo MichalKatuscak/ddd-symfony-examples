@@ -35,12 +35,42 @@ final class Chapter03Controller extends AbstractController
                         );
                         $result = 'Položka přidána. Celkem: ' . $order->total()->formatted();
                         $events = $order->pullEvents();
+                        $events = array_map(function ($e) {
+                            $ref = new \ReflectionClass($e);
+                            $payload = [];
+                            foreach ($ref->getProperties(\ReflectionProperty::IS_PUBLIC) as $prop) {
+                                $val = $prop->getValue($e);
+                                $payload[$prop->getName()] = $val instanceof \DateTimeImmutable
+                                    ? $val->format('Y-m-d H:i:s')
+                                    : $val;
+                            }
+                            return [
+                                'class' => $ref->getShortName(),
+                                'occurredAt' => $e->occurredAt()->format('H:i:s'),
+                                'payload' => $payload,
+                            ];
+                        }, $events);
                     })(),
                     'confirm_with_item' => (function () use ($order, &$result, &$events) {
                         $order->addItem('Demo produkt', 1, new Money(10000, 'CZK'));
                         $order->confirm();
                         $result = 'Objednávka potvrzena. Stav: ' . $order->status()->value();
                         $events = $order->pullEvents();
+                        $events = array_map(function ($e) {
+                            $ref = new \ReflectionClass($e);
+                            $payload = [];
+                            foreach ($ref->getProperties(\ReflectionProperty::IS_PUBLIC) as $prop) {
+                                $val = $prop->getValue($e);
+                                $payload[$prop->getName()] = $val instanceof \DateTimeImmutable
+                                    ? $val->format('Y-m-d H:i:s')
+                                    : $val;
+                            }
+                            return [
+                                'class' => $ref->getShortName(),
+                                'occurredAt' => $e->occurredAt()->format('H:i:s'),
+                                'payload' => $payload,
+                            ];
+                        }, $events);
                     })(),
                     'confirm_empty' => (function () use ($order) {
                         $order->confirm();
