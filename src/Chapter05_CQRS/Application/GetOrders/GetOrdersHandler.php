@@ -1,24 +1,27 @@
 <?php
+
 namespace App\Chapter05_CQRS\Application\GetOrders;
-use App\Chapter05_CQRS\Domain\Repository\OrderRepositoryInterface;
+
+use Doctrine\DBAL\Connection;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 
 #[AsMessageHandler]
 final class GetOrdersHandler
 {
-    public function __construct(private readonly OrderRepositoryInterface $orders) {}
+    public function __construct(private readonly Connection $connection) {}
 
     /** @return OrderView[] */
     public function __invoke(GetOrdersQuery $query): array
     {
-        return array_map(
-            fn($order) => new OrderView(
-                id: substr($order->id()->value, 0, 8) . '…',
-                customerId: $order->customerId(),
-                total: $order->total()->formatted(),
-                itemCount: count($order->items()),
-            ),
-            $this->orders->findAll(),
+        $rows = $this->connection->fetchAllAssociative(
+            'SELECT id, customer_id, total_amount, items FROM ch05_orders ORDER BY rowid DESC'
         );
+
+        return array_map(fn(array $row) => new OrderView(
+            id: substr($row['id'], 0, 8) . '…',
+            customerId: $row['customer_id'],
+            total: number_format($row['total_amount'] / 100, 2) . ' CZK',
+            itemCount: count(json_decode($row['items'], true)),
+        ), $rows);
     }
 }

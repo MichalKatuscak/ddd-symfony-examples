@@ -43,5 +43,53 @@
             {% endif %}
         </div>
     </div>
+
+    <hr class="my-5">
+    <h2>Write Model vs. Read Model</h2>
+    <p>Command side a Query side používají různé reprezentace dat — každá optimalizovaná pro svůj účel.</p>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card h-100 border-danger">
+                <div class="card-header bg-danger text-white"><strong>Write Model — Order agregát</strong></div>
+                <div class="card-body">
+                    <p class="text-muted small">Chrání invarianty. Žádné veřejné gettery na data.</p>
+                    <pre class="bg-light p-2 rounded small">class Order extends AggregateRoot {
+    private string $id;          // skryté
+    private string $customerId;  // skryté
+    private int $totalAmount;    // skryté
+    private array $items;        // skryté
+
+    // Sémantické metody (ne settery):
+    public static function place(...): self
+    public function confirm(): void
+    public function cancel(): void
+    public function pullEvents(): array
+}</pre>
+                    <p class="text-muted small mt-2">Načítá se přes <strong>ORM Repository</strong> — celý agregát do paměti.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100 border-success">
+                <div class="card-header bg-success text-white"><strong>Read Model — OrderView DTO</strong></div>
+                <div class="card-body">
+                    <p class="text-muted small">Flat objekt optimalizovaný pro zobrazení.</p>
+                    <pre class="bg-light p-2 rounded small">final readonly class OrderView {
+    public string $id;           // veřejné
+    public string $customerId;   // veřejné
+    public string $total;        // formátováno
+    public int $itemCount;       // vypočteno
+}</pre>
+                    <p class="text-muted small mt-2">Plněn přes <strong>DBAL Connection</strong> — raw SQL, žádný ORM overhead:</p>
+                    <pre class="bg-light p-2 rounded small">SELECT id, customer_id,
+       total_amount, items
+FROM ch05_orders
+ORDER BY rowid DESC</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    <p class="text-muted mt-3 small">Write model zajišťuje konzistenci (invarianty). Read model zajišťuje výkon (žádné lazy loading, žádný overhead ORM). Každá strana se vyvíjí nezávisle.</p>
 </div>
 {% endblock %}
