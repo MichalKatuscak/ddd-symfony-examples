@@ -35,5 +35,95 @@
             </form>
         </div>
     </div>
+
+    <hr class="my-5">
+    <h2>Value Objects</h2>
+    <p>Value Object je immutabilní objekt definovaný svými atributy — neporovnáváme ho podle identity ale podle hodnoty. Validuje se v konstruktoru.</p>
+
+    {% if voResult %}
+        <div class="alert alert-success">
+            {% if voResult.type == 'email' %}
+                Email('{{ voResult.value }}') ✓ — validní, uložen jako lowercase
+            {% else %}
+                Money({{ voResult.a }}) + Money({{ voResult.b }}) = <strong>{{ voResult.sum }}</strong>
+                &nbsp;|&nbsp; Původní hodnota <code>$a</code> zůstala: {{ voResult.immutable }} (immutabilita ✓)
+            {% endif %}
+        </div>
+    {% endif %}
+    {% if voError %}
+        <div class="alert alert-danger">{{ voError }}</div>
+    {% endif %}
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header"><strong>Email VO</strong> — validace v konstruktoru</div>
+                <div class="card-body">
+                    <form method="post" data-turbo="false">
+                        <input type="hidden" name="action" value="vo_email">
+                        <div class="mb-2">
+                            <input type="text" name="email" value="jan@example.com" class="form-control" placeholder="E-mailová adresa">
+                        </div>
+                        <button class="btn btn-primary">new Email($value)</button>
+                    </form>
+                    <pre class="mt-3 bg-light p-2 rounded small">final readonly class Email {
+    public function __construct(string $value) {
+        if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
+            throw new InvalidArgumentException(...);
+        }
+        $this->value = strtolower($value);
+    }
+}</pre>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header"><strong>Money VO</strong> — immutabilní aritmetika</div>
+                <div class="card-body">
+                    <form method="post" data-turbo="false">
+                        <input type="hidden" name="action" value="vo_money">
+                        <div class="row g-2 mb-2">
+                            <div class="col"><input type="number" name="amount_a" value="599" class="form-control" placeholder="Částka A (CZK)"></div>
+                            <div class="col"><input type="number" name="amount_b" value="299" class="form-control" placeholder="Částka B (CZK)"></div>
+                        </div>
+                        <button class="btn btn-primary">$a->add($b)</button>
+                    </form>
+                    <pre class="mt-3 bg-light p-2 rounded small">final readonly class Money {
+    public function add(self $other): self {
+        // vrací NOVÝ objekt — $this se nemění
+        return new self(
+            $this->amount + $other->amount,
+            $this->currency
+        );
+    }
+}</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="my-5">
+    <h2>Domain Events</h2>
+    <p>Agregát si zaznamenává co se stalo. Volající si eventy vyzvedne přes <code>pullEvents()</code> — agregát neví, kdo je zpracuje.</p>
+
+    {% if events %}
+        <div class="card mb-3 border-warning">
+            <div class="card-header bg-warning"><strong>Raised Domain Events</strong> (po poslední akci)</div>
+            <ul class="list-group list-group-flush">
+                {% for event in events %}
+                <li class="list-group-item">
+                    <span class="badge bg-warning text-dark me-2">{{ event.class }}</span>
+                    <small class="text-muted">{{ event.occurredAt }}</small>
+                    <pre class="mt-1 mb-0 small bg-light p-1 rounded">{{ event.payload|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <div class="alert alert-light border">Eventy se zobrazí po akci výše (Přidat položku nebo Potvrdit objednávku).</div>
+    {% endif %}
+
+    <p class="text-muted"><small><strong>Jak to funguje:</strong> <code>Order::addItem()</code> volá <code>$this->record(new OrderItemAdded(...))</code> interně. <code>pullEvents()</code> z <code>AggregateRoot</code> eventy vrátí a smaže — jsou určeny pro jednorázové zpracování.</small></p>
 </div>
 {% endblock %}
