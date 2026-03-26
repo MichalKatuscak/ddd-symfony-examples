@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+{% block title %}Ukázka: Co je DDD — čistý doménový model{% endblock %}
+{% block body %}
+<div class="container mt-4">
+    <div class="alert alert-info">
+        Tato ukázka patří ke kapitole
+        <a href="{{ path('what_is_ddd') }}"><strong>Co je Domain-Driven Design?</strong></a>
+    </div>
+    <h1>Ukázka: Čistý doménový model</h1>
+    <p>Nákupní košík bez databáze — čistá doménová logika v paměti.</p>
+
+    <form method="post">
+        <table class="table">
+            <thead><tr><th>Produkt</th><th>Cena</th><th>Množství</th></tr></thead>
+            <tbody>
+            {% for i, product in products %}
+                <tr>
+                    <td>{{ product.name() }}</td>
+                    <td>{{ product.price().formatted() }}</td>
+                    <td><input type="number" name="items[{{ i }}]" value="0" min="0" max="10" class="form-control" style="width:80px"></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit" class="btn btn-primary">Přidat do košíku</button>
+    </form>
+
+    {% if cart.itemCount() > 0 %}
+    <div class="card mt-4">
+        <div class="card-header">Košík ({{ cart.itemCount() }} kusů)</div>
+        <ul class="list-group list-group-flush">
+            {% for item in cart.summary() %}
+            <li class="list-group-item d-flex justify-content-between">
+                <span>{{ item.name }} × {{ item.qty }}</span>
+                <span>{{ item.lineTotal }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        <div class="card-footer text-end fw-bold">Celkem: {{ cart.total().formatted() }}</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
