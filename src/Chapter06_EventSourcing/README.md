@@ -15,4 +15,4 @@ Otevři [http://localhost:8000/examples/event-sourcing](http://localhost:8000/ex
 
 ## Odkaz na příručku
 
-[Event Sourcing v Symfony](https://ddd-symfony.cz/event-sourcing)
+[Event Sourcing v Symfony](https://ddd-v-symfony.katuscak.cz/event-sourcing)

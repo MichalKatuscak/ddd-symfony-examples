@@ -15,4 +15,4 @@ Otevři [http://localhost:8000/examples/migrace-z-crud](http://localhost:8000/ex
 
 ## Odkaz na příručku
 
-[Migrace z CRUD na DDD](https://ddd-symfony.cz/migrace-z-crud)
+[Migrace z CRUD na DDD](https://ddd-v-symfony.katuscak.cz/migrace-z-crud)

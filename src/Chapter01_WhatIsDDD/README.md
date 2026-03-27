@@ -1,6 +1,6 @@
 # Kapitola 1: Co je DDD
 
-**Článek v příručce:** https://ddd-symfony.cz/co-je-ddd
+**Článek v příručce:** https://ddd-v-symfony.katuscak.cz/co-je-ddd
 
 ## Co tato ukázka ukazuje
 

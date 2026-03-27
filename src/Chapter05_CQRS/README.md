@@ -15,4 +15,4 @@ Otevři [http://localhost:8000/examples/cqrs](http://localhost:8000/examples/cqr
 
 ## Odkaz na příručku
 
-[CQRS v Symfony](https://ddd-symfony.cz/cqrs)
+[CQRS v Symfony](https://ddd-v-symfony.katuscak.cz/cqrs)

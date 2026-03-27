@@ -16,4 +16,4 @@ Otevři [http://localhost:8000/examples/zakladni-koncepty](http://localhost:8000
 
 ## Odkaz na příručku
 
-[Základní koncepty DDD](https://ddd-symfony.cz/zakladni-koncepty)
+[Základní koncepty DDD](https://ddd-v-symfony.katuscak.cz/zakladni-koncepty)
