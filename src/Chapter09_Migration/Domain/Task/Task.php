@@ -16,7 +16,7 @@ final class Task
         if (empty($title)) {
             throw new \InvalidArgumentException('Task title cannot be empty');
         }
-        $this->status = TaskStatus::todo();
+        $this->status = TaskStatus::Todo;
     }
 
     public static function create(TaskId $id, string $title, string $projectId): self
@@ -26,19 +26,19 @@ final class Task
 
     public function start(string $memberId): void
     {
-        if (!$this->status->isTodo()) {
+        if ($this->status !== TaskStatus::Todo) {
             throw new \DomainException('Task is already started or done');
         }
         $this->assignedTo = $memberId;
-        $this->status = TaskStatus::inProgress();
+        $this->status = TaskStatus::InProgress;
     }
 
     public function complete(): void
     {
-        if (!$this->status->isInProgress()) {
+        if ($this->status !== TaskStatus::InProgress) {
             throw new \DomainException('Task must be in progress before completing');
         }
-        $this->status = TaskStatus::done();
+        $this->status = TaskStatus::Done;
     }
 
     public function id(): TaskId { return $this->id; }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Tests\Chapter09\Domain;
 use App\Chapter09_Migration\Domain\Task\Task;
 use App\Chapter09_Migration\Domain\Task\TaskId;
+use App\Chapter09_Migration\Domain\Task\TaskStatus;
 use PHPUnit\Framework\TestCase;
 
 final class TaskMigrationTest extends TestCase
@@ -12,7 +13,7 @@ final class TaskMigrationTest extends TestCase
     {
         $task = Task::create(TaskId::generate(), 'Refaktorovat controller', 'projekt-1');
         $task->start('member-1');
-        $this->assertTrue($task->status()->isInProgress());
+        $this->assertSame(TaskStatus::InProgress, $task->status());
         $this->assertSame('member-1', $task->assignedTo());
     }
 

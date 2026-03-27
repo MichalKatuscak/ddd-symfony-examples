@@ -5,6 +5,7 @@ namespace App\Tests\Chapter08\Domain;
 use App\Chapter08_Testing\Domain\Task\Task;
 use App\Chapter08_Testing\Domain\Task\TaskId;
 use App\Chapter08_Testing\Domain\Task\TaskAssigned;
+use App\Chapter08_Testing\Domain\Task\TaskStatus;
 use PHPUnit\Framework\TestCase;
 
 final class TaskTest extends TestCase
@@ -12,7 +13,7 @@ final class TaskTest extends TestCase
     public function test_new_task_is_todo(): void
     {
         $task = Task::create(TaskId::generate(), 'Implementovat CQRS', 'projekt-1');
-        $this->assertTrue($task->status()->isTodo());
+        $this->assertSame(TaskStatus::Todo, $task->status());
     }
 
     public function test_assigning_task_raises_domain_event(): void
