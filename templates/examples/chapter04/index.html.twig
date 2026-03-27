@@ -115,6 +115,24 @@ class OrderPlacedListener {
         // $event->orderId, $event->customerId, $event->totalAmount
     }
 }</pre>
+    <hr class="my-5">
+    <h2>Specification Pattern</h2>
+    <p>Specification zapouzdřuje doménové pravidlo do samostatného objektu. Místo podmínek rozsetých po kódu máme pojmenovanou, znovupoužitelnou a testovatelnou specifikaci.</p>
+    <pre class="bg-light p-3 rounded small">final readonly class MinimumOrderAmountSpecification
+{
+    public function __construct(private int $minimumAmountCents) {}
+
+    public function isSatisfiedBy(Order $order): bool
+    {
+        return $order->total()->amount >= $this->minimumAmountCents;
+    }
+}
+
+// Použití:
+$spec = new MinimumOrderAmountSpecification(50000); // 500 CZK
+if (!$spec->isSatisfiedBy($order)) {
+    throw new DomainException('Objednávka nesplňuje minimální hodnotu');
+}</pre>
     <nav class="d-flex justify-content-between mt-5 pt-3 border-top">
         {% if prev_route is defined and prev_route %}
             <a href="{{ path(prev_route) }}">← {{ prev_title }}</a>

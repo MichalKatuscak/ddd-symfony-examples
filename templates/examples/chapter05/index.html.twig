@@ -92,6 +92,34 @@ ORDER BY rowid DESC</pre>
         </div>
     </div>
     <p class="text-muted mt-3 small">Write model zajišťuje konzistenci (invarianty). Read model zajišťuje výkon (žádné lazy loading, žádný overhead ORM). Každá strana se vyvíjí nezávisle.</p>
+
+    <hr class="my-5">
+    <h2>Messenger Bus konfigurace</h2>
+    <p>CQRS v Symfony Messenger využívá <strong>dva oddělené busy</strong> — command bus pro zápis, query bus pro čtení.</p>
+    <div class="row g-4">
+        <div class="col-md-6">
+            <pre class="bg-light p-3 rounded small">// Controller injektuje dva busy:
+public function __construct(
+    #[Target('messenger.bus.command')]
+    private MessageBusInterface $commandBus,
+
+    #[Target('messenger.bus.query')]
+    private MessageBusInterface $queryBus,
+) {}</pre>
+        </div>
+        <div class="col-md-6">
+            <pre class="bg-light p-3 rounded small">// messenger.yaml — konfigurace:
+framework:
+    messenger:
+        buses:
+            messenger.bus.command: []
+            messenger.bus.query: []
+        routing:
+            PlaceOrderCommand: sync
+            GetOrdersQuery: sync</pre>
+        </div>
+    </div>
+    <p class="text-muted small">Command bus zpracovává příkazy (mění stav), Query bus zpracovává dotazy (čte stav). V produkci lze command bus přepnout na async transport.</p>
     <nav class="d-flex justify-content-between mt-5 pt-3 border-top">
         {% if prev_route is defined and prev_route %}
             <a href="{{ path(prev_route) }}">← {{ prev_title }}</a>
