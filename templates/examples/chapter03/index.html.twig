@@ -29,9 +29,13 @@
                 <input type="hidden" name="action" value="confirm_with_item">
                 <button class="btn btn-success w-100">Order.confirm() — úspěch</button>
             </form>
-            <form method="post" data-turbo="false">
+            <form method="post" data-turbo="false" class="mb-2">
                 <input type="hidden" name="action" value="confirm_empty">
                 <button class="btn btn-warning w-100">Order.confirm() na prázdné → DomainException</button>
+            </form>
+            <form method="post" data-turbo="false" class="mb-2">
+                <input type="hidden" name="action" value="confirm_via_service">
+                <button class="btn btn-info w-100">Domain Service: confirm()</button>
             </form>
         </div>
     </div>
@@ -125,5 +129,20 @@
     {% endif %}
 
     <p class="text-muted"><small><strong>Jak to funguje:</strong> <code>Order::addItem()</code> volá <code>$this->record(new OrderItemAdded(...))</code> interně. <code>pullEvents()</code> z <code>AggregateRoot</code> eventy vrátí a smaže — jsou určeny pro jednorázové zpracování.</small></p>
+
+    <hr class="my-5">
+    <h2>Domain Service</h2>
+    <p>Když operace zahrnuje agregát + repozitář (nebo více agregátů), nepatří do jednoho agregátu — patří do <strong>Domain Service</strong>.</p>
+    <pre class="bg-light p-3 rounded small">final class OrderConfirmationService {
+    public function __construct(
+        private readonly OrderRepositoryInterface $orders,
+    ) {}
+
+    public function confirm(Order $order): void {
+        $order->confirm();      // doménová logika
+        $this->orders->save($order); // persistence
+    }
+}</pre>
+    <p class="text-muted small">Domain Service drží závislost na repozitáři — Agregát ne. Tím zůstává agregát čistý a testovatelný bez infrastruktury.</p>
 </div>
 {% endblock %}

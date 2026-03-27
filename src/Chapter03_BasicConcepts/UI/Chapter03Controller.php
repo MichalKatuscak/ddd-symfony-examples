@@ -8,6 +8,8 @@ use App\Chapter03_BasicConcepts\Domain\Email;
 use App\Chapter03_BasicConcepts\Domain\Order\Money;
 use App\Chapter03_BasicConcepts\Domain\Order\Order;
 use App\Chapter03_BasicConcepts\Domain\Order\OrderId;
+use App\Chapter03_BasicConcepts\Domain\Service\OrderConfirmationService;
+use App\Chapter03_BasicConcepts\Infrastructure\Persistence\InMemoryOrderRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -76,6 +78,29 @@ final class Chapter03Controller extends AbstractController
                     })(),
                     'confirm_empty' => (function () use ($order) {
                         $order->confirm();
+                    })(),
+                    'confirm_via_service' => (function () use ($order, &$result, &$events) {
+                        $order->addItem('Demo produkt', 1, new Money(10000, 'CZK'));
+                        $repo = new InMemoryOrderRepository();
+                        $service = new OrderConfirmationService($repo);
+                        $service->confirm($order);
+                        $result = 'Objednávka potvrzena přes Domain Service. Stav: ' . $order->status()->value;
+                        $events = $order->pullEvents();
+                        $events = array_map(function ($e) {
+                            $ref = new \ReflectionClass($e);
+                            $payload = [];
+                            foreach ($ref->getProperties(\ReflectionProperty::IS_PUBLIC) as $prop) {
+                                $val = $prop->getValue($e);
+                                $payload[$prop->getName()] = $val instanceof \DateTimeImmutable
+                                    ? $val->format('Y-m-d H:i:s')
+                                    : $val;
+                            }
+                            return [
+                                'class' => $ref->getShortName(),
+                                'occurredAt' => $e->occurredAt()->format('H:i:s'),
+                                'payload' => $payload,
+                            ];
+                        }, $events);
                     })(),
                     'vo_email' => (function () use ($request, &$voResult) {
                         $email = new Email($request->request->get('email', ''));
