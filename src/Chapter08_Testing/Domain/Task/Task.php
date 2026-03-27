@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Chapter08_Testing\Domain\Task;
 use App\Shared\Domain\AggregateRoot;
 
@@ -15,7 +17,7 @@ final class Task extends AggregateRoot
         if (empty($title)) {
             throw new \InvalidArgumentException('Task title cannot be empty');
         }
-        $this->status = TaskStatus::todo();
+        $this->status = TaskStatus::Todo;
     }
 
     public static function create(TaskId $id, string $title, string $projectId): self
@@ -25,17 +27,20 @@ final class Task extends AggregateRoot
 
     public function assignTo(string $memberId): void
     {
-        if ($this->status->isDone()) {
+        if ($this->status === TaskStatus::Done) {
             throw new \DomainException('Cannot reassign a completed task');
         }
         $this->assignedTo = $memberId;
-        $this->status = TaskStatus::inProgress();
+        $this->status = TaskStatus::InProgress;
         $this->record(new TaskAssigned($this->id->value, $memberId));
     }
 
     public function complete(): void
     {
-        $this->status = TaskStatus::done();
+        if ($this->status !== TaskStatus::InProgress) {
+            throw new \DomainException('Task must be in progress before completing');
+        }
+        $this->status = TaskStatus::Done;
     }
 
     public function id(): TaskId { return $this->id; }

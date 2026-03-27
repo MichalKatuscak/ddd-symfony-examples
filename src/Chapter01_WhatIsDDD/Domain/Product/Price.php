@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Chapter01_WhatIsDDD\Domain\Product;
 
 final readonly class Price
 {
     public function __construct(
-        public readonly int $amount,
-        public readonly string $currency,
+        public int $amount,
+        public string $currency,
     ) {
         if ($amount < 0) {
             throw new \InvalidArgumentException('Price cannot be negative');

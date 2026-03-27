@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Chapter05\Application;
 
 use App\Chapter05_CQRS\Application\PlaceOrder\PlaceOrderCommand;
@@ -8,6 +10,7 @@ use App\Chapter05_CQRS\Domain\Order\Order;
 use App\Chapter05_CQRS\Domain\Order\OrderId;
 use App\Chapter05_CQRS\Domain\Repository\OrderRepositoryInterface;
 use PHPUnit\Framework\TestCase;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 final class PlaceOrderHandlerTest extends TestCase
 {
@@ -20,7 +23,16 @@ final class PlaceOrderHandlerTest extends TestCase
             public function findAll(): array { return []; }
         };
 
-        $handler = new PlaceOrderHandler($repo);
+        $eventDispatcher = new class implements EventDispatcherInterface {
+            public array $dispatched = [];
+            public function dispatch(object $event, ?string $eventName = null): object
+            {
+                $this->dispatched[] = $event;
+                return $event;
+            }
+        };
+
+        $handler = new PlaceOrderHandler($repo, $eventDispatcher);
         $orderId = ($handler)(new PlaceOrderCommand(
             customerId: 'zákazník-1',
             items: [['name' => 'Symfony kniha', 'qty' => 1, 'price' => 59900]],

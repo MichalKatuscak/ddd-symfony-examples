@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Chapter01\Domain;
 
 use App\Chapter01_WhatIsDDD\Domain\Cart\Cart;

@@ -1,5 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 namespace App\Chapter06_EventSourcing\Infrastructure\EventStore;
+
+use App\Chapter06_EventSourcing\Domain\Order\ConcurrencyException;
 use App\Shared\Domain\DomainEvent;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -7,8 +12,13 @@ final class DoctrineEventStore implements EventStoreInterface
 {
     public function __construct(private readonly EntityManagerInterface $em) {}
 
-    public function append(string $aggregateId, array $events): void
+    public function append(string $aggregateId, array $events, int $expectedVersion): void
     {
+        $currentVersion = $this->countEvents($aggregateId);
+        if ($currentVersion !== $expectedVersion) {
+            throw ConcurrencyException::versionMismatch($aggregateId, $expectedVersion, $currentVersion);
+        }
+
         foreach ($events as $event) {
             $payload = $this->serializeEvent($event);
             $stored = new StoredEvent(
@@ -25,7 +35,7 @@ final class DoctrineEventStore implements EventStoreInterface
     public function load(string $aggregateId): array
     {
         $stored = $this->em->getRepository(StoredEvent::class)
-            ->findBy(['aggregateId' => $aggregateId]);
+            ->findBy(['aggregateId' => $aggregateId], ['id' => 'ASC']);
 
         return array_map(function (StoredEvent $s) {
             $class = $s->eventClass();
@@ -45,12 +55,17 @@ final class DoctrineEventStore implements EventStoreInterface
         }, $stored);
     }
 
+    public function countEvents(string $aggregateId): int
+    {
+        return (int) $this->em->getRepository(StoredEvent::class)
+            ->count(['aggregateId' => $aggregateId]);
+    }
+
     private function serializeEvent(DomainEvent $event): array
     {
         $ref = new \ReflectionClass($event);
         $payload = [];
         foreach ($ref->getProperties() as $prop) {
-            $prop->setAccessible(true);
             $value = $prop->getValue($event);
             if ($value instanceof \DateTimeImmutable) {
                 $value = $value->format(\DateTimeInterface::ATOM);

@@ -6,6 +6,7 @@
         Tato ukázka patří ke kapitole
         <a href="https://ddd-symfony.cz/event-sourcing"><strong>Event Sourcing v DDD a Symfony</strong></a>
     </div>
+    <nav class="mb-3"><a href="{{ path('examples_index') }}">← Zpět na přehled</a></nav>
     <h1>Ukázka: Event Sourcing</h1>
     <p>Stav objednávky není uložen jako řádek v DB — je <strong>rekonstruován z event logu</strong>.</p>
 
@@ -44,5 +45,35 @@
             {% endif %}
         </div>
     </div>
+
+    <hr class="my-5">
+    <h2>Projekce (Read Model)</h2>
+    <p>Projekce je denormalizovaná tabulka aktualizovaná z event streamu. Nevyžaduje rekonstrukci agregátu pro čtení.</p>
+    {% if projections is defined and projections is not empty %}
+        <table class="table table-sm">
+            <thead><tr><th>Order ID</th><th>Zákazník</th><th>Celkem</th><th>Stav</th><th>Vytvořeno</th></tr></thead>
+            <tbody>
+            {% for p in projections %}
+                <tr>
+                    <td><code>{{ p.orderId()|slice(0,8) }}…</code></td>
+                    <td>{{ p.customerId() }}</td>
+                    <td>{{ (p.totalAmount() / 100)|number_format(2) }} CZK</td>
+                    <td><span class="badge {{ p.status() == 'confirmed' ? 'bg-success' : (p.status() == 'cancelled' ? 'bg-danger' : 'bg-secondary') }}">{{ p.status() }}</span></td>
+                    <td>{{ p.createdAt()|date('H:i:s') }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="text-muted">Zatím žádné projekce. Zadej objednávku výše.</p>
+    {% endif %}
+    <nav class="d-flex justify-content-between mt-5 pt-3 border-top">
+        {% if prev_route is defined and prev_route %}
+            <a href="{{ path(prev_route) }}">← {{ prev_title }}</a>
+        {% else %}<span></span>{% endif %}
+        {% if next_route is defined and next_route %}
+            <a href="{{ path(next_route) }}">{{ next_title }} →</a>
+        {% else %}<span></span>{% endif %}
+    </nav>
 </div>
 {% endblock %}

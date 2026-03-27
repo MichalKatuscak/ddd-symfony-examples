@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Chapter05_CQRS\UI;
 use App\Chapter05_CQRS\Application\GetOrders\GetOrdersQuery;
 use App\Chapter05_CQRS\Application\PlaceOrder\PlaceOrderCommand;
@@ -28,7 +30,7 @@ final class Chapter05Controller extends AbstractController
                 items: [[
                     'name' => $request->request->get('product', 'Produkt'),
                     'qty' => max(1, (int) $request->request->get('qty', 1)),
-                    'price' => (int) ($request->request->get('price', 100) * 100),
+                    'price' => (int) round((float) $request->request->get('price', '100') * 100),
                 ]],
             ));
             $orderId = $envelope->last(HandledStamp::class)?->getResult();
@@ -41,6 +43,10 @@ final class Chapter05Controller extends AbstractController
         return $this->render('examples/chapter05/index.html.twig', [
             'orders' => $orders,
             'result' => $result,
+            'prev_route' => 'chapter04',
+            'prev_title' => 'Implementace v Symfony',
+            'next_route' => 'chapter06',
+            'next_title' => 'Event Sourcing',
         ]);
     }
 }

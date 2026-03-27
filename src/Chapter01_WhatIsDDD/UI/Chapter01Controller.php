@@ -1,9 +1,12 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Chapter01_WhatIsDDD\UI;
 
 use App\Chapter01_WhatIsDDD\Domain\BoundedContext\CatalogProduct;
 use App\Chapter01_WhatIsDDD\Domain\BoundedContext\OrderProduct;
 use App\Chapter01_WhatIsDDD\Domain\Cart\Cart;
+use App\Chapter01_WhatIsDDD\Domain\ContextMap\CatalogProductTranslator;
 use App\Chapter01_WhatIsDDD\Domain\Product\Price;
 use App\Chapter01_WhatIsDDD\Domain\Product\Product;
 use App\Chapter01_WhatIsDDD\Domain\Product\ProductId;
@@ -53,11 +56,20 @@ final class Chapter01Controller extends AbstractController
             taxRate: 0.21,
         );
 
+        $translator = new CatalogProductTranslator();
+        $translatedProduct = $translator->toOrderProduct($catalogProduct, 59900, 'CZK', 0.21);
+
         return $this->render('examples/chapter01/index.html.twig', [
             'products' => $products,
             'cart' => $cart,
             'catalogProduct' => $catalogProduct,
             'orderProduct' => $orderProduct,
+            'translator' => true,
+            'translatedProduct' => $translatedProduct,
+            'prev_route' => null,
+            'prev_title' => null,
+            'next_route' => 'chapter03',
+            'next_title' => 'Základní koncepty DDD',
         ]);
     }
 }

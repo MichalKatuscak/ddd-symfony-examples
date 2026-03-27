@@ -1,11 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Chapter03_BasicConcepts\UI;
 
 use App\Chapter03_BasicConcepts\Domain\Email;
 use App\Chapter03_BasicConcepts\Domain\Order\Money;
 use App\Chapter03_BasicConcepts\Domain\Order\Order;
 use App\Chapter03_BasicConcepts\Domain\Order\OrderId;
+use App\Chapter03_BasicConcepts\Domain\Service\OrderConfirmationService;
+use App\Chapter03_BasicConcepts\Infrastructure\Persistence\InMemoryOrderRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -31,7 +35,7 @@ final class Chapter03Controller extends AbstractController
                         $order->addItem(
                             $request->request->get('name', 'Produkt'),
                             max(1, (int) $request->request->get('qty', 1)),
-                            new Money((int) ($request->request->get('price', 100) * 100), 'CZK'),
+                            new Money((int) round((float) $request->request->get('price', '100') * 100), 'CZK'),
                         );
                         $result = 'Položka přidána. Celkem: ' . $order->total()->formatted();
                         $events = $order->pullEvents();
@@ -54,7 +58,7 @@ final class Chapter03Controller extends AbstractController
                     'confirm_with_item' => (function () use ($order, &$result, &$events) {
                         $order->addItem('Demo produkt', 1, new Money(10000, 'CZK'));
                         $order->confirm();
-                        $result = 'Objednávka potvrzena. Stav: ' . $order->status()->value();
+                        $result = 'Objednávka potvrzena. Stav: ' . $order->status()->value;
                         $events = $order->pullEvents();
                         $events = array_map(function ($e) {
                             $ref = new \ReflectionClass($e);
@@ -75,13 +79,36 @@ final class Chapter03Controller extends AbstractController
                     'confirm_empty' => (function () use ($order) {
                         $order->confirm();
                     })(),
+                    'confirm_via_service' => (function () use ($order, &$result, &$events) {
+                        $order->addItem('Demo produkt', 1, new Money(10000, 'CZK'));
+                        $repo = new InMemoryOrderRepository();
+                        $service = new OrderConfirmationService($repo);
+                        $service->confirm($order);
+                        $result = 'Objednávka potvrzena přes Domain Service. Stav: ' . $order->status()->value;
+                        $events = $order->pullEvents();
+                        $events = array_map(function ($e) {
+                            $ref = new \ReflectionClass($e);
+                            $payload = [];
+                            foreach ($ref->getProperties(\ReflectionProperty::IS_PUBLIC) as $prop) {
+                                $val = $prop->getValue($e);
+                                $payload[$prop->getName()] = $val instanceof \DateTimeImmutable
+                                    ? $val->format('Y-m-d H:i:s')
+                                    : $val;
+                            }
+                            return [
+                                'class' => $ref->getShortName(),
+                                'occurredAt' => $e->occurredAt()->format('H:i:s'),
+                                'payload' => $payload,
+                            ];
+                        }, $events);
+                    })(),
                     'vo_email' => (function () use ($request, &$voResult) {
                         $email = new Email($request->request->get('email', ''));
                         $voResult = ['type' => 'email', 'ok' => true, 'value' => (string) $email];
                     })(),
                     'vo_money' => (function () use ($request, &$voResult) {
-                        $a = new Money((int) ($request->request->get('amount_a', 0) * 100), 'CZK');
-                        $b = new Money((int) ($request->request->get('amount_b', 0) * 100), 'CZK');
+                        $a = new Money((int) round((float) $request->request->get('amount_a', '0') * 100), 'CZK');
+                        $b = new Money((int) round((float) $request->request->get('amount_b', '0') * 100), 'CZK');
                         $sum = $a->add($b);
                         $voResult = [
                             'type' => 'money',
@@ -112,6 +139,10 @@ final class Chapter03Controller extends AbstractController
             'voResult' => $voResult,
             'voError' => $voError,
             'events' => $events,
+            'prev_route' => 'chapter01',
+            'prev_title' => 'Co je DDD',
+            'next_route' => 'chapter04',
+            'next_title' => 'Implementace v Symfony',
         ]);
     }
 }

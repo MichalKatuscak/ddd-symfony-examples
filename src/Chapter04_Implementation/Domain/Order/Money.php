@@ -1,16 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Chapter04_Implementation\Domain\Order;
 
 final readonly class Money
 {
     public function __construct(
-        public readonly int $amount,
-        public readonly string $currency,
+        public int $amount,
+        public string $currency,
     ) {}
 
     public function add(self $other): self
     {
+        if ($this->currency !== $other->currency) {
+            throw new \InvalidArgumentException(
+                sprintf('Cannot add %s to %s', $other->currency, $this->currency)
+            );
+        }
         return new self($this->amount + $other->amount, $this->currency);
     }
 
@@ -21,7 +28,7 @@ final readonly class Money
 
     public function percentage(int $pct): self
     {
-        return new self((int) ($this->amount * $pct / 100), $this->currency);
+        return new self((int) round($this->amount * $pct / 100), $this->currency);
     }
 
     public function formatted(): string

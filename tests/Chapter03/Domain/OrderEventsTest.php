@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Chapter03\Domain;
 
 use App\Chapter03_BasicConcepts\Domain\Order\Events\OrderConfirmed;

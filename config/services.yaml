@@ -27,3 +27,6 @@ services:
 
     App\Chapter05_CQRS\Domain\Repository\OrderRepositoryInterface:
         class: App\Chapter05_CQRS\Infrastructure\Persistence\DoctrineOrderRepository
+
+    App\Chapter06_EventSourcing\Infrastructure\EventStore\EventStoreInterface:
+        class: App\Chapter06_EventSourcing\Infrastructure\EventStore\DoctrineEventStore

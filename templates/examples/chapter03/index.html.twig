@@ -6,6 +6,7 @@
         Tato ukázka patří ke kapitole
         <a href="https://ddd-symfony.cz/zakladni-koncepty"><strong>Základní koncepty DDD</strong></a>
     </div>
+    <nav class="mb-3"><a href="{{ path('examples_index') }}">← Zpět na přehled</a></nav>
     <h1>Ukázka: Entity, Value Objects, Agregát</h1>
     <p>Objednávka jako agregát — chrání svá doménová invarianty.</p>
 
@@ -29,9 +30,13 @@
                 <input type="hidden" name="action" value="confirm_with_item">
                 <button class="btn btn-success w-100">Order.confirm() — úspěch</button>
             </form>
-            <form method="post" data-turbo="false">
+            <form method="post" data-turbo="false" class="mb-2">
                 <input type="hidden" name="action" value="confirm_empty">
                 <button class="btn btn-warning w-100">Order.confirm() na prázdné → DomainException</button>
+            </form>
+            <form method="post" data-turbo="false" class="mb-2">
+                <input type="hidden" name="action" value="confirm_via_service">
+                <button class="btn btn-info w-100">Domain Service: confirm()</button>
             </form>
         </div>
     </div>
@@ -125,5 +130,28 @@
     {% endif %}
 
     <p class="text-muted"><small><strong>Jak to funguje:</strong> <code>Order::addItem()</code> volá <code>$this->record(new OrderItemAdded(...))</code> interně. <code>pullEvents()</code> z <code>AggregateRoot</code> eventy vrátí a smaže — jsou určeny pro jednorázové zpracování.</small></p>
+
+    <hr class="my-5">
+    <h2>Domain Service</h2>
+    <p>Když operace zahrnuje agregát + repozitář (nebo více agregátů), nepatří do jednoho agregátu — patří do <strong>Domain Service</strong>.</p>
+    <pre class="bg-light p-3 rounded small">final class OrderConfirmationService {
+    public function __construct(
+        private readonly OrderRepositoryInterface $orders,
+    ) {}
+
+    public function confirm(Order $order): void {
+        $order->confirm();      // doménová logika
+        $this->orders->save($order); // persistence
+    }
+}</pre>
+    <p class="text-muted small">Domain Service drží závislost na repozitáři — Agregát ne. Tím zůstává agregát čistý a testovatelný bez infrastruktury.</p>
+    <nav class="d-flex justify-content-between mt-5 pt-3 border-top">
+        {% if prev_route is defined and prev_route %}
+            <a href="{{ path(prev_route) }}">← {{ prev_title }}</a>
+        {% else %}<span></span>{% endif %}
+        {% if next_route is defined and next_route %}
+            <a href="{{ path(next_route) }}">{{ next_title }} →</a>
+        {% else %}<span></span>{% endif %}
+    </nav>
 </div>
 {% endblock %}
