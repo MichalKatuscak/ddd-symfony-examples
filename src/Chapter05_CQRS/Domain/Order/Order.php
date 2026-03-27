@@ -3,23 +3,15 @@
 declare(strict_types=1);
 namespace App\Chapter05_CQRS\Domain\Order;
 use App\Shared\Domain\AggregateRoot;
-use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity]
-#[ORM\Table(name: 'ch05_orders')]
 class Order extends AggregateRoot
 {
-    #[ORM\Id]
-    #[ORM\Column(type: 'string', length: 36)]
     private string $id;
 
-    #[ORM\Column(type: 'string')]
     private string $customerId;
 
-    #[ORM\Column(type: 'integer')]
     private int $totalAmount = 0;
 
-    #[ORM\Column(type: 'json')]
     private array $items = [];
 
     private function __construct(OrderId $id, string $customerId)
