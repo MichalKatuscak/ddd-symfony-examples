@@ -13,6 +13,9 @@ final class Task
         private readonly string $title,
         private readonly string $projectId,
     ) {
+        if (empty($title)) {
+            throw new \InvalidArgumentException('Task title cannot be empty');
+        }
         $this->status = TaskStatus::todo();
     }
 
