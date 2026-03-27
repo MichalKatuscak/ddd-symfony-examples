@@ -27,7 +27,7 @@ final class DoctrineEventStore implements EventStoreInterface
     public function load(string $aggregateId): array
     {
         $stored = $this->em->getRepository(StoredEvent::class)
-            ->findBy(['aggregateId' => $aggregateId]);
+            ->findBy(['aggregateId' => $aggregateId], ['id' => 'ASC']);
 
         return array_map(function (StoredEvent $s) {
             $class = $s->eventClass();

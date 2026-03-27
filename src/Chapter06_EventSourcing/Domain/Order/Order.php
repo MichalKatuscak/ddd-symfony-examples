@@ -39,6 +39,9 @@ final class Order
 
     public function confirm(): void
     {
+        if ($this->status !== 'pending') {
+            throw new \DomainException('Cannot confirm order in status: ' . $this->status);
+        }
         $event = new OrderConfirmed($this->id->value);
         $this->apply($event);
         $this->uncommittedEvents[] = $event;
@@ -46,6 +49,9 @@ final class Order
 
     public function cancel(string $reason): void
     {
+        if ($this->status !== 'pending') {
+            throw new \DomainException('Cannot cancel order in status: ' . $this->status);
+        }
         $event = new OrderCancelled($this->id->value, $reason);
         $this->apply($event);
         $this->uncommittedEvents[] = $event;
@@ -61,7 +67,7 @@ final class Order
             })(),
             $event instanceof OrderConfirmed => (function () { $this->status = 'confirmed'; })(),
             $event instanceof OrderCancelled => (function () { $this->status = 'cancelled'; })(),
-            default => null,
+            default => throw new \LogicException('Unknown event: ' . get_class($event)),
         };
     }
 
