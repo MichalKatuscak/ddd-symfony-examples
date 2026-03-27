@@ -37,6 +37,9 @@ final class Task extends AggregateRoot
 
     public function complete(): void
     {
+        if (!$this->status->isInProgress()) {
+            throw new \DomainException('Task must be in progress before completing');
+        }
         $this->status = TaskStatus::done();
     }
 

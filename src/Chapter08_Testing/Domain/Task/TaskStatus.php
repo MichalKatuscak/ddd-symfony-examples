@@ -9,6 +9,7 @@ final readonly class TaskStatus
     public static function inProgress(): self { return new self('in_progress'); }
     public static function done(): self { return new self('done'); }
     public function isTodo(): bool { return $this->value === 'todo'; }
+    public function isInProgress(): bool { return $this->value === 'in_progress'; }
     public function isDone(): bool { return $this->value === 'done'; }
     public function value(): string { return $this->value; }
 }
