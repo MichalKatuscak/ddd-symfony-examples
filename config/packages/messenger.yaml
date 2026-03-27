@@ -30,3 +30,7 @@ framework:
             'App\Chapter04_Implementation\Application\GetOrders\GetOrdersQuery': sync
             'App\Chapter05_CQRS\Application\PlaceOrder\PlaceOrderCommand': sync
             'App\Chapter05_CQRS\Application\GetOrders\GetOrdersQuery': sync
+            'App\Chapter07_Sagas\Application\Command\ReserveStockCommand': sync
+            'App\Chapter07_Sagas\Application\Command\ProcessPaymentCommand': sync
+            'App\Chapter07_Sagas\Application\Command\ShipOrderCommand': sync
+            'App\Chapter07_Sagas\Application\Command\CompensateCommand': sync
