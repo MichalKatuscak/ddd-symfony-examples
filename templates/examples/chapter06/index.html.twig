@@ -6,6 +6,7 @@
         Tato ukázka patří ke kapitole
         <a href="https://ddd-symfony.cz/event-sourcing"><strong>Event Sourcing v DDD a Symfony</strong></a>
     </div>
+    <nav class="mb-3"><a href="{{ path('examples_index') }}">← Zpět na přehled</a></nav>
     <h1>Ukázka: Event Sourcing</h1>
     <p>Stav objednávky není uložen jako řádek v DB — je <strong>rekonstruován z event logu</strong>.</p>
 
@@ -66,5 +67,13 @@
     {% else %}
         <p class="text-muted">Zatím žádné projekce. Zadej objednávku výše.</p>
     {% endif %}
+    <nav class="d-flex justify-content-between mt-5 pt-3 border-top">
+        {% if prev_route is defined and prev_route %}
+            <a href="{{ path(prev_route) }}">← {{ prev_title }}</a>
+        {% else %}<span></span>{% endif %}
+        {% if next_route is defined and next_route %}
+            <a href="{{ path(next_route) }}">{{ next_title }} →</a>
+        {% else %}<span></span>{% endif %}
+    </nav>
 </div>
 {% endblock %}

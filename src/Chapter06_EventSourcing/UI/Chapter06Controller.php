@@ -88,6 +88,10 @@ final class Chapter06Controller extends AbstractController
             'history' => $history,
             'currentOrderId' => $currentOrderId,
             'projections' => $projections,
+            'prev_route' => 'chapter05',
+            'prev_title' => 'CQRS',
+            'next_route' => 'chapter07',
+            'next_title' => 'Ságy',
         ]);
     }
 }

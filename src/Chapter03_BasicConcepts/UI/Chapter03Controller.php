@@ -139,6 +139,10 @@ final class Chapter03Controller extends AbstractController
             'voResult' => $voResult,
             'voError' => $voError,
             'events' => $events,
+            'prev_route' => 'chapter01',
+            'prev_title' => 'Co je DDD',
+            'next_route' => 'chapter04',
+            'next_title' => 'Implementace v Symfony',
         ]);
     }
 }

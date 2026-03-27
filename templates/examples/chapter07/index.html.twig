@@ -6,6 +6,7 @@
         Tato ukázka patří ke kapitole
         <a href="https://ddd-symfony.cz/sagy-a-process-managery"><strong>Ságy a Process Managery</strong></a>
     </div>
+    <nav class="mb-3"><a href="{{ path('examples_index') }}">← Zpět na přehled</a></nav>
     <h1>Ukázka: Orchestrační sága s kompenzacemi</h1>
     <p>Process Manager řídí dlouhotrvající transakci přes více kroků pomocí Symfony Messenger.
        Při selhání kteréhokoli kroku spustí kompenzační akce v opačném pořadí.</p>
@@ -104,5 +105,13 @@ if ($saga->state() === SagaState::Compensating) {
     $this->bus->dispatch(new CompensateCommand($sagaId, 'ProcessPayment'));
     return $this->repository->findById($sagaId);
 }</code></pre>
+    <nav class="d-flex justify-content-between mt-5 pt-3 border-top">
+        {% if prev_route is defined and prev_route %}
+            <a href="{{ path(prev_route) }}">← {{ prev_title }}</a>
+        {% else %}<span></span>{% endif %}
+        {% if next_route is defined and next_route %}
+            <a href="{{ path(next_route) }}">{{ next_title }} →</a>
+        {% else %}<span></span>{% endif %}
+    </nav>
 </div>
 {% endblock %}

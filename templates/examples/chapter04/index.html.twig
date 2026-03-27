@@ -6,6 +6,7 @@
         Tato ukázka patří ke kapitole
         <a href="https://ddd-symfony.cz/implementace-v-symfony"><strong>Implementace DDD v Symfony</strong></a>
     </div>
+    <nav class="mb-3"><a href="{{ path('examples_index') }}">← Zpět na přehled</a></nav>
     <h1>Ukázka: Repository, Domain Service, Domain Event</h1>
 
     {% if result %}<div class="alert alert-success">{{ result }}</div>{% endif %}
@@ -114,5 +115,13 @@ class OrderPlacedListener {
         // $event->orderId, $event->customerId, $event->totalAmount
     }
 }</pre>
+    <nav class="d-flex justify-content-between mt-5 pt-3 border-top">
+        {% if prev_route is defined and prev_route %}
+            <a href="{{ path(prev_route) }}">← {{ prev_title }}</a>
+        {% else %}<span></span>{% endif %}
+        {% if next_route is defined and next_route %}
+            <a href="{{ path(next_route) }}">{{ next_title }} →</a>
+        {% else %}<span></span>{% endif %}
+    </nav>
 </div>
 {% endblock %}

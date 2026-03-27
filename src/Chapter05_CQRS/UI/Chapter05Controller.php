@@ -43,6 +43,10 @@ final class Chapter05Controller extends AbstractController
         return $this->render('examples/chapter05/index.html.twig', [
             'orders' => $orders,
             'result' => $result,
+            'prev_route' => 'chapter04',
+            'prev_title' => 'Implementace v Symfony',
+            'next_route' => 'chapter06',
+            'next_title' => 'Event Sourcing',
         ]);
     }
 }

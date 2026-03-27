@@ -32,6 +32,10 @@ final class Chapter07Controller extends AbstractController
 
         return $this->render('examples/chapter07/index.html.twig', [
             'saga' => $saga,
+            'prev_route' => 'chapter06',
+            'prev_title' => 'Event Sourcing',
+            'next_route' => 'chapter08',
+            'next_title' => 'Testování',
         ]);
     }
 }

@@ -53,6 +53,10 @@ final class Chapter09Controller extends AbstractController
             'dddResult' => $dddResult,
             'dddError' => $dddError,
             'crudResult' => $crudResult,
+            'prev_route' => 'chapter08',
+            'prev_title' => 'Testování',
+            'next_route' => null,
+            'next_title' => null,
         ]);
     }
 }

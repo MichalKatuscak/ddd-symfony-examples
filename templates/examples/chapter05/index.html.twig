@@ -6,6 +6,7 @@
         Tato ukázka patří ke kapitole
         <a href="https://ddd-symfony.cz/cqrs"><strong>CQRS v Symfony 8</strong></a>
     </div>
+    <nav class="mb-3"><a href="{{ path('examples_index') }}">← Zpět na přehled</a></nav>
     <h1>Ukázka: CQRS — Commands a Queries</h1>
     <p>Zápis jde přes <code>PlaceOrderCommand</code>, čtení přes <code>GetOrdersQuery</code> — dva oddělené toky dat.</p>
 
@@ -91,5 +92,13 @@ ORDER BY rowid DESC</pre>
         </div>
     </div>
     <p class="text-muted mt-3 small">Write model zajišťuje konzistenci (invarianty). Read model zajišťuje výkon (žádné lazy loading, žádný overhead ORM). Každá strana se vyvíjí nezávisle.</p>
+    <nav class="d-flex justify-content-between mt-5 pt-3 border-top">
+        {% if prev_route is defined and prev_route %}
+            <a href="{{ path(prev_route) }}">← {{ prev_title }}</a>
+        {% else %}<span></span>{% endif %}
+        {% if next_route is defined and next_route %}
+            <a href="{{ path(next_route) }}">{{ next_title }} →</a>
+        {% else %}<span></span>{% endif %}
+    </nav>
 </div>
 {% endblock %}

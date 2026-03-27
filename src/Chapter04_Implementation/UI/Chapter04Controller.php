@@ -53,6 +53,10 @@ final class Chapter04Controller extends AbstractController
             'orders' => $orders,
             'result' => $result,
             'dispatchedEvents' => [],
+            'prev_route' => 'chapter03',
+            'prev_title' => 'Základní koncepty DDD',
+            'next_route' => 'chapter05',
+            'next_title' => 'CQRS',
         ]);
     }
 }

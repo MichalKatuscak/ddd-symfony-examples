@@ -66,6 +66,10 @@ final class Chapter01Controller extends AbstractController
             'orderProduct' => $orderProduct,
             'translator' => true,
             'translatedProduct' => $translatedProduct,
+            'prev_route' => null,
+            'prev_title' => null,
+            'next_route' => 'chapter03',
+            'next_title' => 'Základní koncepty DDD',
         ]);
     }
 }
