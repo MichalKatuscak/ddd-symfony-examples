@@ -5,26 +5,17 @@ declare(strict_types=1);
 namespace App\Chapter04_Implementation\Domain\Order;
 
 use App\Shared\Domain\AggregateRoot;
-use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity]
-#[ORM\Table(name: 'ch04_orders')]
 class Order extends AggregateRoot
 {
-    #[ORM\Id]
-    #[ORM\Column(type: 'string', length: 36)]
     private string $id;
 
-    #[ORM\Column(type: 'string')]
     private string $customerId;
 
-    #[ORM\Column(type: 'integer')]
     private int $totalAmount = 0;
 
-    #[ORM\Column(type: 'string', length: 20)]
     private string $status;
 
-    #[ORM\Column(type: 'json')]
     private array $items = [];
 
     private function __construct(OrderId $id, string $customerId)

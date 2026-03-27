@@ -7,6 +7,11 @@ doctrine:
         #server_version: '16'
 
         profiling_collect_backtrace: '%kernel.debug%'
+        types:
+            ch04_order_id:
+                class: App\Chapter04_Implementation\Infrastructure\Doctrine\OrderIdType
+            ch04_money_amount:
+                class: App\Chapter04_Implementation\Infrastructure\Doctrine\MoneyAmountType
     orm:
         validate_xml_mapping: true
         naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
@@ -20,6 +25,24 @@ doctrine:
                 dir: '%kernel.project_dir%/src'
                 prefix: 'App'
                 alias: App
+            Chapter04:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/config/doctrine/Chapter04_Implementation'
+                prefix: 'App\Chapter04_Implementation\Domain\Order'
+                alias: Chapter04
+            Chapter05:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/config/doctrine/Chapter05_CQRS'
+                prefix: 'App\Chapter05_CQRS\Domain\Order'
+                alias: Chapter05
+            Chapter06:
+                type: xml
+                is_bundle: false
+                dir: '%kernel.project_dir%/config/doctrine/Chapter06_EventSourcing'
+                prefix: 'App\Chapter06_EventSourcing\Infrastructure\EventStore'
+                alias: Chapter06
         controller_resolver:
             auto_mapping: false
 
