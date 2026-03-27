@@ -899,7 +899,7 @@ Replace `templates/examples/chapter04/index.html.twig`:
 <div class="container mt-4">
     <div class="alert alert-info">
         Tato ukázka patří ke kapitole
-        <a href="https://ddd-symfony.cz/implementace-v-symfony"><strong>Implementace DDD v Symfony</strong></a>
+        <a href="https://ddd-v-symfony.katuscak.cz/implementace-v-symfony"><strong>Implementace DDD v Symfony</strong></a>
     </div>
     <h1>Ukázka: Repository, Domain Service, Domain Event</h1>
 
@@ -1093,7 +1093,7 @@ Replace `templates/examples/chapter05/index.html.twig`:
 <div class="container mt-4">
     <div class="alert alert-info">
         Tato ukázka patří ke kapitole
-        <a href="https://ddd-symfony.cz/cqrs"><strong>CQRS v Symfony 8</strong></a>
+        <a href="https://ddd-v-symfony.katuscak.cz/cqrs"><strong>CQRS v Symfony 8</strong></a>
     </div>
     <h1>Ukázka: CQRS — Commands a Queries</h1>
     <p>Zápis jde přes <code>PlaceOrderCommand</code>, čtení přes <code>GetOrdersQuery</code> — dva oddělené toky dat.</p>
