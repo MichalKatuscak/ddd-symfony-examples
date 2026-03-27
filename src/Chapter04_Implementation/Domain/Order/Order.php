@@ -25,15 +25,13 @@ class Order extends AggregateRoot
         $this->status = 'pending';
     }
 
-    /**
-     * @param array<array{name: string, qty: int, price: int}> $items
-     */
-    public static function place(OrderId $id, string $customerId, array $items): self
+    /** @param OrderLine[] $lines */
+    public static function place(OrderId $id, string $customerId, array $lines): self
     {
         $order = new self($id, $customerId);
-        foreach ($items as $item) {
-            $order->items[] = $item;
-            $order->totalAmount += $item['price'] * $item['qty'];
+        foreach ($lines as $line) {
+            $order->items[] = $line->toArray();
+            $order->totalAmount += $line->lineTotal()->amount;
         }
         $order->record(new OrderPlaced($id->value, $customerId, $order->totalAmount));
         return $order;

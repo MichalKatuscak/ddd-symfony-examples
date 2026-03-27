@@ -21,7 +21,7 @@ final class PlaceOrderHandler
     public function __invoke(PlaceOrderCommand $command): string
     {
         $id = OrderId::generate();
-        $order = Order::place($id, $command->customerId, $command->items);
+        $order = Order::place($id, $command->customerId, $command->lines);
         $this->orders->save($order);
 
         foreach ($order->pullEvents() as $event) {

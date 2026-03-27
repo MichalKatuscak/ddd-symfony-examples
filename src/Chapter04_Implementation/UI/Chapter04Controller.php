@@ -7,6 +7,7 @@ namespace App\Chapter04_Implementation\UI;
 use App\Chapter04_Implementation\Application\GetOrders\GetOrdersQuery;
 use App\Chapter04_Implementation\Application\PlaceOrder\PlaceOrderCommand;
 use App\Chapter04_Implementation\Domain\Order\Money;
+use App\Chapter04_Implementation\Domain\Order\OrderLine;
 use App\Chapter04_Implementation\Domain\Service\OrderPricingService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Target;
@@ -39,7 +40,7 @@ final class Chapter04Controller extends AbstractController
 
             $envelope = $this->commandBus->dispatch(new PlaceOrderCommand(
                 customerId: 'student-' . random_int(1, 99),
-                items: [['name' => $request->request->get('name', 'Produkt'), 'qty' => $qty, 'price' => $discountedPrice->amount]],
+                lines: [new OrderLine($request->request->get('name', 'Produkt'), $qty, $discountedPrice)],
             ));
             $orderId = $envelope->last(HandledStamp::class)?->getResult();
             $result = sprintf('Objednávka uložena. ID: %s…', substr((string) $orderId, 0, 8));

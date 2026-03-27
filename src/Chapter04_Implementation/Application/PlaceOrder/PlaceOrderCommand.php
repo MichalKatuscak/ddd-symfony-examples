@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Chapter04_Implementation\Application\PlaceOrder;
 
+use App\Chapter04_Implementation\Domain\Order\OrderLine;
+
 final readonly class PlaceOrderCommand
 {
-    /** @param array<array{name: string, qty: int, price: int}> $items */
+    /** @param OrderLine[] $lines */
     public function __construct(
         public string $customerId,
-        public array $items,
+        public array $lines,
     ) {}
 }
