@@ -13,6 +13,11 @@ final readonly class Money
 
     public function add(self $other): self
     {
+        if ($this->currency !== $other->currency) {
+            throw new \InvalidArgumentException(
+                sprintf('Cannot add %s to %s', $other->currency, $this->currency)
+            );
+        }
         return new self($this->amount + $other->amount, $this->currency);
     }
 
@@ -23,7 +28,7 @@ final readonly class Money
 
     public function percentage(int $pct): self
     {
-        return new self((int) ($this->amount * $pct / 100), $this->currency);
+        return new self((int) round($this->amount * $pct / 100), $this->currency);
     }
 
     public function formatted(): string
