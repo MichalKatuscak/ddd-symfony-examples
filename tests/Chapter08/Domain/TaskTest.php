@@ -40,4 +40,19 @@ final class TaskTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         Task::create(TaskId::generate(), '', 'projekt-1');
     }
+
+    public function testCompleteRequiresInProgress(): void
+    {
+        $this->expectException(\DomainException::class);
+        $task = Task::create(TaskId::generate(), 'Nový úkol', 'projekt-1');
+        $task->complete(); // status is Todo, not InProgress
+    }
+
+    public function testAssignToChangesStatus(): void
+    {
+        $task = Task::create(TaskId::generate(), 'Implementovat repozitář', 'projekt-1');
+        $task->assignTo('member-5');
+        $this->assertSame(TaskStatus::InProgress, $task->status());
+        $this->assertSame('member-5', $task->assignedTo());
+    }
 }

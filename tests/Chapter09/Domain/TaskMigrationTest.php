@@ -23,4 +23,18 @@ final class TaskMigrationTest extends TestCase
         $task = Task::create(TaskId::generate(), 'Hotový úkol', 'projekt-1');
         $task->complete(); // cannot complete without starting
     }
+
+    public function testTitleCannotBeEmpty(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        Task::create(TaskId::generate(), '', 'projekt-1');
+    }
+
+    public function testDoubleStartThrows(): void
+    {
+        $this->expectException(\DomainException::class);
+        $task = Task::create(TaskId::generate(), 'Úkol', 'projekt-1');
+        $task->start('member-1');
+        $task->start('member-2'); // already started
+    }
 }
