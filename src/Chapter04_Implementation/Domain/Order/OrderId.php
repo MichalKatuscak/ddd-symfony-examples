@@ -6,7 +6,7 @@ namespace App\Chapter04_Implementation\Domain\Order;
 
 final readonly class OrderId
 {
-    public function __construct(public readonly string $value)
+    public function __construct(public string $value)
     {
         if (empty($value)) {
             throw new \InvalidArgumentException('OrderId cannot be empty');

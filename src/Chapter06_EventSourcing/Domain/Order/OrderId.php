@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Chapter06_EventSourcing\Domain\Order;
 final readonly class OrderId
 {
-    public function __construct(public readonly string $value)
+    public function __construct(public string $value)
     {
         if (empty($value)) throw new \InvalidArgumentException('OrderId cannot be empty');
     }

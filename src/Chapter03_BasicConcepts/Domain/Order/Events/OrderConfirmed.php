@@ -9,9 +9,9 @@ use App\Shared\Domain\DomainEvent;
 final readonly class OrderConfirmed implements DomainEvent
 {
     public function __construct(
-        public readonly string $orderId,
-        public readonly int $totalAmount,
-        private readonly \DateTimeImmutable $occurredAt = new \DateTimeImmutable(),
+        public string $orderId,
+        public int $totalAmount,
+        private \DateTimeImmutable $occurredAt = new \DateTimeImmutable(),
     ) {}
 
     public function occurredAt(): \DateTimeImmutable

@@ -9,11 +9,11 @@ use App\Shared\Domain\DomainEvent;
 final readonly class OrderItemAdded implements DomainEvent
 {
     public function __construct(
-        public readonly string $orderId,
-        public readonly string $productName,
-        public readonly int $qty,
-        public readonly int $lineTotalCents,
-        private readonly \DateTimeImmutable $occurredAt = new \DateTimeImmutable(),
+        public string $orderId,
+        public string $productName,
+        public int $qty,
+        public int $lineTotalCents,
+        private \DateTimeImmutable $occurredAt = new \DateTimeImmutable(),
     ) {}
 
     public function occurredAt(): \DateTimeImmutable

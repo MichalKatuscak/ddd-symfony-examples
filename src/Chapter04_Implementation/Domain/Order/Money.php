@@ -7,8 +7,8 @@ namespace App\Chapter04_Implementation\Domain\Order;
 final readonly class Money
 {
     public function __construct(
-        public readonly int $amount,
-        public readonly string $currency,
+        public int $amount,
+        public string $currency,
     ) {}
 
     public function add(self $other): self

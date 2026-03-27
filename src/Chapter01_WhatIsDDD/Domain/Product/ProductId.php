@@ -6,7 +6,7 @@ namespace App\Chapter01_WhatIsDDD\Domain\Product;
 
 final readonly class ProductId
 {
-    public function __construct(public readonly string $value)
+    public function __construct(public string $value)
     {
         if (empty($value)) {
             throw new \InvalidArgumentException('ProductId cannot be empty');

@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Chapter03_BasicConcepts\Domain\Order;
 
-final class OrderItem
+final readonly class OrderItem
 {
     public function __construct(
-        private readonly string $name,
-        private readonly int $quantity,
-        private readonly Money $unitPrice,
+        private string $name,
+        private int $quantity,
+        private Money $unitPrice,
     ) {}
 
     public function name(): string { return $this->name; }

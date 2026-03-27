@@ -6,7 +6,7 @@ namespace App\Chapter04_Implementation\Domain\Order;
 
 final readonly class OrderStatus
 {
-    private function __construct(private readonly string $value) {}
+    private function __construct(private string $value) {}
 
     public static function pending(): self { return new self('pending'); }
     public static function confirmed(): self { return new self('confirmed'); }

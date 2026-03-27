@@ -7,8 +7,8 @@ namespace App\Chapter03_BasicConcepts\Domain\Order;
 final readonly class Money
 {
     public function __construct(
-        public readonly int $amount,
-        public readonly string $currency,
+        public int $amount,
+        public string $currency,
     ) {
         if ($amount < 0) {
             throw new \InvalidArgumentException('Amount cannot be negative');
