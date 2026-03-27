@@ -6,37 +6,54 @@
         Tato ukázka patří ke kapitole
         <a href="https://ddd-symfony.cz/migrace-z-crud"><strong>Migrace z CRUD architektury na DDD</strong></a>
     </div>
-    <h1>Ukázka: CRUD → DDD</h1>
+    <h1>Ukázka: CRUD vs DDD — porovnání</h1>
 
-    {% if result %}<div class="alert alert-success">{{ result }}</div>{% endif %}
-    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+    {% if dddResult %}<div class="alert alert-success">{{ dddResult }}</div>{% endif %}
+    {% if dddError %}<div class="alert alert-danger">{{ dddError }}</div>{% endif %}
+    {% if crudResult %}<div class="alert alert-warning">{{ crudResult }}</div>{% endif %}
 
     <div class="row g-4">
         <div class="col-md-6">
-            <h3>CRUD přístup (problém)</h3>
-            <pre class="bg-light p-3 rounded"><code>// Kdokoliv může nastavit libovolný stav:
+            <div class="card h-100 border-danger">
+                <div class="card-header bg-danger text-white"><strong>CRUD přístup (problém)</strong></div>
+                <div class="card-body">
+                    <pre class="bg-light p-3 rounded small"><code>// Kdokoliv může nastavit libovolný stav:
 $task->setStatus('done');
 // Žádná validace přechodů!
+// Nebo dokonce neplatnou hodnotu:
+$task->setStatus('banana');
 // Logika je v controlleru, ne v objektu.</code></pre>
+                    <form method="post" data-turbo="false" class="mb-2">
+                        <input type="hidden" name="action" value="crud_skip">
+                        <button class="btn btn-warning w-100">setStatus('done') bez start() — projde!</button>
+                    </form>
+                    <form method="post" data-turbo="false">
+                        <input type="hidden" name="action" value="crud_invalid">
+                        <button class="btn btn-danger w-100">setStatus('banana') — žádná validace!</button>
+                    </form>
+                </div>
+            </div>
         </div>
         <div class="col-md-6">
-            <h3>DDD přístup (řešení)</h3>
-            <pre class="bg-light p-3 rounded"><code>// Doménový model chrání své invarianty:
+            <div class="card h-100 border-success">
+                <div class="card-header bg-success text-white"><strong>DDD přístup (řešení)</strong></div>
+                <div class="card-body">
+                    <pre class="bg-light p-3 rounded small"><code>// Doménový model chrání své invarianty:
 $task->start('member-1');   // todo → in_progress
 $task->complete();          // in_progress → done
-// Přeskočení start() vyvolá DomainException.</code></pre>
+// Přeskočení start() vyvolá DomainException.
+// Neplatný stav není ani možný (PHP enum).</code></pre>
+                    <form method="post" data-turbo="false" class="mb-2">
+                        <input type="hidden" name="action" value="ddd_valid">
+                        <button class="btn btn-success w-100">start() → complete() — správný přechod ✓</button>
+                    </form>
+                    <form method="post" data-turbo="false">
+                        <input type="hidden" name="action" value="ddd_invalid">
+                        <button class="btn btn-outline-danger w-100">complete() bez start() → DomainException</button>
+                    </form>
+                </div>
+            </div>
         </div>
-    </div>
-
-    <div class="mt-4">
-        <form method="post" data-turbo="false" class="d-inline me-2">
-            <input type="hidden" name="action" value="valid">
-            <button class="btn btn-success">Správný přechod (start → complete)</button>
-        </form>
-        <form method="post" data-turbo="false" class="d-inline">
-            <input type="hidden" name="action" value="invalid">
-            <button class="btn btn-warning">Neplatný přechod (complete bez start) → DomainException</button>
-        </form>
     </div>
 </div>
 {% endblock %}
