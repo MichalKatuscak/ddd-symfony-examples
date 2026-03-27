@@ -5,7 +5,7 @@ namespace App\Chapter06_EventSourcing\UI;
 
 use App\Chapter06_EventSourcing\Domain\Order\Order;
 use App\Chapter06_EventSourcing\Domain\Order\OrderId;
-use App\Chapter06_EventSourcing\Infrastructure\EventStore\DoctrineEventStore;
+use App\Chapter06_EventSourcing\Infrastructure\EventStore\EventStoreInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class Chapter06Controller extends AbstractController
 {
-    public function __construct(private readonly DoctrineEventStore $eventStore) {}
+    public function __construct(private readonly EventStoreInterface $eventStore) {}
 
     #[Route('/examples/event-sourcing', name: 'chapter06')]
     public function index(Request $request): Response
@@ -27,26 +27,36 @@ final class Chapter06Controller extends AbstractController
             $orderId = $request->request->get('order_id') ?: OrderId::generate()->value;
             $currentOrderId = $orderId;
 
-            if ($action === 'place') {
-                $order = Order::place(
-                    new OrderId($orderId),
-                    'zákazník-1',
-                    (int) round((float) $request->request->get('price', '599') * 100),
-                );
-                $this->eventStore->append($orderId, $order->pullUncommittedEvents());
-                $result = 'Objednávka zadána. ID: ' . substr($orderId, 0, 8) . '…';
-            } elseif ($action === 'confirm') {
-                $events = $this->eventStore->load($orderId);
-                $order = Order::reconstruct(new OrderId($orderId), $events);
-                $order->confirm();
-                $this->eventStore->append($orderId, $order->pullUncommittedEvents());
-                $result = 'Objednávka potvrzena. Rekonstruována z ' . count($events) . ' eventů.';
-            } elseif ($action === 'cancel') {
-                $events = $this->eventStore->load($orderId);
-                $order = Order::reconstruct(new OrderId($orderId), $events);
-                $order->cancel('Zákazník si to rozmyslel');
-                $this->eventStore->append($orderId, $order->pullUncommittedEvents());
-                $result = 'Objednávka zrušena.';
+            try {
+                if ($action === 'place') {
+                    $order = Order::place(
+                        new OrderId($orderId),
+                        'zákazník-1',
+                        (int) round((float) $request->request->get('price', '599') * 100),
+                    );
+                    $this->eventStore->append($orderId, $order->pullUncommittedEvents());
+                    $result = 'Objednávka zadána. ID: ' . substr($orderId, 0, 8) . '…';
+                } elseif ($action === 'confirm') {
+                    $events = $this->eventStore->load($orderId);
+                    if (empty($events)) {
+                        throw new \DomainException('Objednávka neexistuje: ' . $orderId);
+                    }
+                    $order = Order::reconstruct(new OrderId($orderId), $events);
+                    $order->confirm();
+                    $this->eventStore->append($orderId, $order->pullUncommittedEvents());
+                    $result = 'Objednávka potvrzena. Rekonstruována z ' . count($events) . ' eventů.';
+                } elseif ($action === 'cancel') {
+                    $events = $this->eventStore->load($orderId);
+                    if (empty($events)) {
+                        throw new \DomainException('Objednávka neexistuje: ' . $orderId);
+                    }
+                    $order = Order::reconstruct(new OrderId($orderId), $events);
+                    $order->cancel('Zákazník si to rozmyslel');
+                    $this->eventStore->append($orderId, $order->pullUncommittedEvents());
+                    $result = 'Objednávka zrušena.';
+                }
+            } catch (\DomainException $e) {
+                $result = 'Chyba: ' . $e->getMessage();
             }
 
             $history = $this->eventStore->load($currentOrderId);
