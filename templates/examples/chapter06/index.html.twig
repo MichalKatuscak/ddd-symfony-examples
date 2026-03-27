@@ -44,5 +44,27 @@
             {% endif %}
         </div>
     </div>
+
+    <hr class="my-5">
+    <h2>Projekce (Read Model)</h2>
+    <p>Projekce je denormalizovaná tabulka aktualizovaná z event streamu. Nevyžaduje rekonstrukci agregátu pro čtení.</p>
+    {% if projections is defined and projections is not empty %}
+        <table class="table table-sm">
+            <thead><tr><th>Order ID</th><th>Zákazník</th><th>Celkem</th><th>Stav</th><th>Vytvořeno</th></tr></thead>
+            <tbody>
+            {% for p in projections %}
+                <tr>
+                    <td><code>{{ p.orderId()|slice(0,8) }}…</code></td>
+                    <td>{{ p.customerId() }}</td>
+                    <td>{{ (p.totalAmount() / 100)|number_format(2) }} CZK</td>
+                    <td><span class="badge {{ p.status() == 'confirmed' ? 'bg-success' : (p.status() == 'cancelled' ? 'bg-danger' : 'bg-secondary') }}">{{ p.status() }}</span></td>
+                    <td>{{ p.createdAt()|date('H:i:s') }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="text-muted">Zatím žádné projekce. Zadej objednávku výše.</p>
+    {% endif %}
 </div>
 {% endblock %}
