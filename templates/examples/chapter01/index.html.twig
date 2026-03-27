@@ -81,6 +81,34 @@
     <p class="text-muted mt-3"><small>Obě třídy nesou stejné <code>productId</code>, ale mají různé atributy — protože slouží různým účelům.</small></p>
 
     <hr class="my-5">
+    <h2>Anti-Corruption Layer (ACL)</h2>
+    <p>Když Order kontext potřebuje data z Catalog kontextu, nepřistupuje přímo. Používá <strong>translator</strong>, který chrání Order kontext před změnami v Catalog kontextu.</p>
+
+    <div class="card mb-3">
+        <div class="card-header"><strong>CatalogProductTranslator</strong> — ACL v akci</div>
+        <div class="card-body">
+            <p>Vstup: <code>CatalogProduct</code> → Výstup: <code>OrderProduct</code></p>
+            <pre class="bg-light p-2 rounded small">class CatalogProductTranslator {
+    public function toOrderProduct(
+        CatalogProduct $catalog, int $price, ...
+    ): OrderProduct {
+        return new OrderProduct(
+            productId: $catalog->id,
+            unitPriceCents: $price, ...
+        );
+    }
+}</pre>
+            {% if translator %}
+            <p class="text-success small">Výsledek překladu: <code>OrderProduct</code> s productId = <code>{{ translatedProduct.productId }}</code>, cena {{ translatedProduct.unitPriceCents }} haléřů, daň {{ (translatedProduct.taxRate * 100)|number_format(0) }} %</p>
+            {% endif %}
+            <p class="text-muted small">Pokud se <code>CatalogProduct</code> změní (přidá nový atribut), stačí upravit translator — <code>OrderProduct</code> a celý Order kontext zůstanou nedotčeny.</p>
+        </div>
+    </div>
+
+    <h2>Shared Kernel</h2>
+    <p><code>ProductId</code> je hodnota sdílená mezi kontexty — oba kontexty musí souhlasit s jejím formátem. To je <strong>Shared Kernel</strong> — minimální společný kód.</p>
+
+    <hr class="my-5">
     <h2>Ubiquitous Language — stejný výraz, jiný význam</h2>
     <p>Jazyk musí být shodný v rámci jednoho kontextu. Mezi kontexty se stejný výraz může lišit.</p>
     <table class="table table-bordered">
