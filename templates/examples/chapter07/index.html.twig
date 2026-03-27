@@ -7,35 +7,102 @@
         <a href="https://ddd-symfony.cz/sagy-a-process-managery"><strong>Ságy a Process Managery</strong></a>
     </div>
     <h1>Ukázka: Orchestrační sága s kompenzacemi</h1>
-    <p>Sága řídí dlouhotrvající transakci přes více kroků. Při chybě spustí kompenzační akce.</p>
+    <p>Process Manager řídí dlouhotrvající transakci přes více kroků pomocí Symfony Messenger.
+       Při selhání kteréhokoli kroku spustí kompenzační akce v opačném pořadí.</p>
 
     <form method="post" data-turbo="false" class="mb-4">
-        <div class="mb-3">
-            <label class="form-label">Sklad dostupný?</label>
-            <select name="stock" class="form-select" style="width:auto">
-                <option value="1">Ano</option>
-                <option value="0">Ne (sága selže v kroku 1)</option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Platba úspěšná?</label>
-            <select name="payment" class="form-select" style="width:auto">
-                <option value="1">Ano</option>
-                <option value="0">Ne (sága selže v kroku 2, kompenzuje krok 1)</option>
-            </select>
+        <div class="row g-3 mb-3">
+            <div class="col-auto">
+                <label class="form-label">Sklad dostupný?</label>
+                <select name="stock" class="form-select">
+                    <option value="1">Ano</option>
+                    <option value="0">Ne (sága selže v kroku 1)</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label">Platba úspěšná?</label>
+                <select name="payment" class="form-select">
+                    <option value="1">Ano</option>
+                    <option value="0">Ne (sága selže v kroku 2, kompenzuje krok 1)</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label">Doručení úspěšné?</label>
+                <select name="shipment" class="form-select">
+                    <option value="1">Ano</option>
+                    <option value="0">Ne (sága selže v kroku 3, kompenzuje kroky 1+2)</option>
+                </select>
+            </div>
         </div>
         <button class="btn btn-primary">Spustit ságu</button>
     </form>
 
-    {% if log is not empty %}
-    <h3>Průběh ságy:</h3>
-    <ol>
-        {% for entry in log %}
-        <li class="{{ 'FAILED' in entry ? 'text-danger' : ('COMPENSATED' in entry ? 'text-warning' : 'text-success') }}">
-            {{ entry }}
+    {% if saga is not null %}
+    <h3>
+        Výsledek ságy:
+        {% if saga.state.value == 'completed' %}
+            <span class="badge bg-success">Completed</span>
+        {% elseif saga.state.value == 'failed' %}
+            <span class="badge bg-danger">Failed</span>
+        {% elseif saga.state.value == 'compensating' %}
+            <span class="badge bg-warning text-dark">Compensating</span>
+        {% else %}
+            <span class="badge bg-secondary">{{ saga.state.value }}</span>
+        {% endif %}
+    </h3>
+
+    <p class="text-muted">Saga ID: {{ saga.id }} | Order: {{ saga.orderId }} | Částka: {{ saga.amount }} Kč</p>
+
+    <h4>Kroky ságy:</h4>
+    <ol class="list-group list-group-numbered mb-4">
+        {% for step in saga.steps %}
+        <li class="list-group-item d-flex justify-content-between align-items-start
+            {{ step.status == 'ok' ? 'list-group-item-success' : '' }}
+            {{ step.status == 'failed' ? 'list-group-item-danger' : '' }}
+            {{ step.status == 'compensated' ? 'list-group-item-warning' : '' }}">
+            <div class="ms-2 me-auto">
+                <div class="fw-bold">{{ step.name }}</div>
+            </div>
+            <span class="badge
+                {{ step.status == 'ok' ? 'bg-success' : '' }}
+                {{ step.status == 'failed' ? 'bg-danger' : '' }}
+                {{ step.status == 'compensated' ? 'bg-warning text-dark' : '' }}
+                rounded-pill">{{ step.status|upper }}</span>
         </li>
         {% endfor %}
     </ol>
     {% endif %}
+
+    <hr>
+    <h3>Jak to funguje?</h3>
+    <p>Orchestrační sága (Process Manager) řídí objednávku přes tyto kroky:</p>
+    <ol>
+        <li><strong>ReserveStock</strong> — rezervace skladu</li>
+        <li><strong>ProcessPayment</strong> — zpracování platby</li>
+        <li><strong>ShipOrder</strong> — odeslání objednávky</li>
+    </ol>
+    <p>Každý krok je <code>Command</code> odeslaný přes <strong>Symfony Messenger</strong> bus.
+       Orchestrátor po každém kroku zkontroluje stav ságy.
+       Pokud krok selže, spustí <code>CompensateCommand</code>, který vrátí předchozí kroky:</p>
+    <ul>
+        <li>Selhání platby &rarr; kompenzace skladu</li>
+        <li>Selhání doručení &rarr; kompenzace platby + skladu</li>
+    </ul>
+
+    <pre class="bg-light p-3 rounded"><code>// SagaOrchestrator — řídí kroky
+$this->bus->dispatch(new ReserveStockCommand(...));
+$saga = $this->repository->findById($sagaId);
+
+if ($saga->state() === SagaState::Failed) {
+    return $saga; // stock selhal, žádná kompenzace
+}
+
+$this->bus->dispatch(new ProcessPaymentCommand(...));
+$saga = $this->repository->findById($sagaId);
+
+if ($saga->state() === SagaState::Compensating) {
+    $this->bus->dispatch(new CompensateCommand($sagaId, 'ProcessPayment'));
+    return $this->repository->findById($sagaId);
+}</code></pre>
 </div>
 {% endblock %}
