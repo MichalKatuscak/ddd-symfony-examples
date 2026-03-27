@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 namespace App\Chapter05_CQRS\Domain\Order;
+
+use Symfony\Component\Uid\Uuid;
 final readonly class OrderId
 {
     public function __construct(public string $value)
@@ -10,6 +12,6 @@ final readonly class OrderId
     }
     public static function generate(): self
     {
-        return new self(\Symfony\Component\Uid\Uuid::v4()->toRfc4122());
+        return new self(Uuid::v4()->toRfc4122());
     }
 }
