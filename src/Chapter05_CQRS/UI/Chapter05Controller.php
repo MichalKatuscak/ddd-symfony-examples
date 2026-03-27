@@ -30,7 +30,7 @@ final class Chapter05Controller extends AbstractController
                 items: [[
                     'name' => $request->request->get('product', 'Produkt'),
                     'qty' => max(1, (int) $request->request->get('qty', 1)),
-                    'price' => (int) ($request->request->get('price', 100) * 100),
+                    'price' => (int) round((float) $request->request->get('price', '100') * 100),
                 ]],
             ));
             $orderId = $envelope->last(HandledStamp::class)?->getResult();

@@ -33,7 +33,7 @@ final class Chapter03Controller extends AbstractController
                         $order->addItem(
                             $request->request->get('name', 'Produkt'),
                             max(1, (int) $request->request->get('qty', 1)),
-                            new Money((int) ($request->request->get('price', 100) * 100), 'CZK'),
+                            new Money((int) round((float) $request->request->get('price', '100') * 100), 'CZK'),
                         );
                         $result = 'Položka přidána. Celkem: ' . $order->total()->formatted();
                         $events = $order->pullEvents();
@@ -82,8 +82,8 @@ final class Chapter03Controller extends AbstractController
                         $voResult = ['type' => 'email', 'ok' => true, 'value' => (string) $email];
                     })(),
                     'vo_money' => (function () use ($request, &$voResult) {
-                        $a = new Money((int) ($request->request->get('amount_a', 0) * 100), 'CZK');
-                        $b = new Money((int) ($request->request->get('amount_b', 0) * 100), 'CZK');
+                        $a = new Money((int) round((float) $request->request->get('amount_a', '0') * 100), 'CZK');
+                        $b = new Money((int) round((float) $request->request->get('amount_b', '0') * 100), 'CZK');
                         $sum = $a->add($b);
                         $voResult = [
                             'type' => 'money',

@@ -29,7 +29,7 @@ final class Chapter04Controller extends AbstractController
 
         if ($request->isMethod('POST')) {
             $qty = max(1, (int) $request->request->get('qty', 1));
-            $price = (int) ($request->request->get('price', 100) * 100);
+            $price = (int) round((float) $request->request->get('price', '100') * 100);
             $discountedPrice = $this->pricing->applyVolumeDiscount(
                 new Money($price, 'CZK'),
                 $qty,

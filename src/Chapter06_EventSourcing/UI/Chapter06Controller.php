@@ -31,7 +31,7 @@ final class Chapter06Controller extends AbstractController
                 $order = Order::place(
                     new OrderId($orderId),
                     'zákazník-1',
-                    (int) ($request->request->get('price', 599) * 100),
+                    (int) round((float) $request->request->get('price', '599') * 100),
                 );
                 $this->eventStore->append($orderId, $order->pullUncommittedEvents());
                 $result = 'Objednávka zadána. ID: ' . substr($orderId, 0, 8) . '…';
