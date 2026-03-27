@@ -56,7 +56,7 @@ final class Chapter03Controller extends AbstractController
                     'confirm_with_item' => (function () use ($order, &$result, &$events) {
                         $order->addItem('Demo produkt', 1, new Money(10000, 'CZK'));
                         $order->confirm();
-                        $result = 'Objednávka potvrzena. Stav: ' . $order->status()->value();
+                        $result = 'Objednávka potvrzena. Stav: ' . $order->status()->value;
                         $events = $order->pullEvents();
                         $events = array_map(function ($e) {
                             $ref = new \ReflectionClass($e);

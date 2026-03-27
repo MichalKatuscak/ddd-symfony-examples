@@ -18,7 +18,7 @@ final class Order extends AggregateRoot
         private readonly OrderId $id,
         private readonly string $customerId,
     ) {
-        $this->status = OrderStatus::pending();
+        $this->status = OrderStatus::Pending;
     }
 
     public static function create(OrderId $id, string $customerId): self
@@ -28,7 +28,7 @@ final class Order extends AggregateRoot
 
     public function addItem(string $name, int $qty, Money $unitPrice): void
     {
-        if (!$this->status->isPending()) {
+        if ($this->status !== OrderStatus::Pending) {
             throw new \DomainException('Cannot add items to a non-pending order');
         }
         $item = new OrderItem($name, $qty, $unitPrice);
@@ -46,7 +46,7 @@ final class Order extends AggregateRoot
         if (empty($this->items)) {
             throw new \DomainException('Cannot confirm an empty order');
         }
-        $this->status = OrderStatus::confirmed();
+        $this->status = OrderStatus::Confirmed;
         $this->record(new OrderConfirmed(
             orderId: $this->id->value,
             totalAmount: $this->total()->amount,

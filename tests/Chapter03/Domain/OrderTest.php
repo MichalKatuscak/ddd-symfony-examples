@@ -7,6 +7,7 @@ namespace App\Tests\Chapter03\Domain;
 use App\Chapter03_BasicConcepts\Domain\Order\Money;
 use App\Chapter03_BasicConcepts\Domain\Order\Order;
 use App\Chapter03_BasicConcepts\Domain\Order\OrderId;
+use App\Chapter03_BasicConcepts\Domain\Order\OrderStatus;
 use PHPUnit\Framework\TestCase;
 
 final class OrderTest extends TestCase
@@ -14,7 +15,7 @@ final class OrderTest extends TestCase
     public function test_new_order_is_pending(): void
     {
         $order = Order::create(OrderId::generate(), 'zákazník-1');
-        $this->assertTrue($order->status()->isPending());
+        $this->assertSame(OrderStatus::Pending, $order->status());
     }
 
     public function test_can_add_item_to_pending_order(): void
