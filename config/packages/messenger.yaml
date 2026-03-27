@@ -26,5 +26,7 @@ framework:
 
             # Route your messages to the transports
             # 'App\Message\YourMessage': async
+            'App\Chapter04_Implementation\Application\PlaceOrder\PlaceOrderCommand': sync
+            'App\Chapter04_Implementation\Application\GetOrders\GetOrdersQuery': sync
             'App\Chapter05_CQRS\Application\PlaceOrder\PlaceOrderCommand': sync
             'App\Chapter05_CQRS\Application\GetOrders\GetOrdersQuery': sync

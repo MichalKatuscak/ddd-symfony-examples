@@ -4,20 +4,23 @@ declare(strict_types=1);
 
 namespace App\Chapter04_Implementation\UI;
 
+use App\Chapter04_Implementation\Application\GetOrders\GetOrdersQuery;
+use App\Chapter04_Implementation\Application\PlaceOrder\PlaceOrderCommand;
 use App\Chapter04_Implementation\Domain\Order\Money;
-use App\Chapter04_Implementation\Domain\Order\Order;
-use App\Chapter04_Implementation\Domain\Order\OrderId;
-use App\Chapter04_Implementation\Domain\Repository\OrderRepositoryInterface;
 use App\Chapter04_Implementation\Domain\Service\OrderPricingService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\HandledStamp;
 use Symfony\Component\Routing\Attribute\Route;
 
 final class Chapter04Controller extends AbstractController
 {
     public function __construct(
-        private readonly OrderRepositoryInterface $orders,
+        #[Target('messenger.bus.command')] private readonly MessageBusInterface $commandBus,
+        #[Target('messenger.bus.query')] private readonly MessageBusInterface $queryBus,
         private readonly OrderPricingService $pricing,
     ) {}
 
@@ -25,7 +28,6 @@ final class Chapter04Controller extends AbstractController
     public function index(Request $request): Response
     {
         $result = null;
-        $dispatchedEvents = [];
 
         if ($request->isMethod('POST')) {
             $qty = max(1, (int) $request->request->get('qty', 1));
@@ -35,40 +37,21 @@ final class Chapter04Controller extends AbstractController
                 $qty,
             );
 
-            $order = Order::place(
-                OrderId::generate(),
-                'student-' . rand(1, 99),
-                [['name' => $request->request->get('name', 'Produkt'), 'qty' => $qty, 'price' => $discountedPrice->amount]],
-            );
-            $this->orders->save($order);
-
-            $rawEvents = $order->pullEvents();
-            $dispatchedEvents = array_map(function ($e) {
-                $ref = new \ReflectionClass($e);
-                $payload = [];
-                foreach ($ref->getProperties(\ReflectionProperty::IS_PUBLIC) as $prop) {
-                    $val = $prop->getValue($e);
-                    $payload[$prop->getName()] = $val instanceof \DateTimeImmutable
-                        ? $val->format('Y-m-d H:i:s')
-                        : $val;
-                }
-                return [
-                    'class' => $ref->getShortName(),
-                    'occurredAt' => $e->occurredAt()->format('H:i:s'),
-                    'payload' => $payload,
-                ];
-            }, $rawEvents);
-
-            $result = sprintf(
-                'Objednávka uložena. Celkem: %s.',
-                $order->total()->formatted(),
-            );
+            $envelope = $this->commandBus->dispatch(new PlaceOrderCommand(
+                customerId: 'student-' . random_int(1, 99),
+                items: [['name' => $request->request->get('name', 'Produkt'), 'qty' => $qty, 'price' => $discountedPrice->amount]],
+            ));
+            $orderId = $envelope->last(HandledStamp::class)?->getResult();
+            $result = sprintf('Objednávka uložena. ID: %s…', substr((string) $orderId, 0, 8));
         }
 
+        $envelope = $this->queryBus->dispatch(new GetOrdersQuery());
+        $orders = $envelope->last(HandledStamp::class)?->getResult() ?? [];
+
         return $this->render('examples/chapter04/index.html.twig', [
-            'orders' => $this->orders->findAll(),
+            'orders' => $orders,
             'result' => $result,
-            'dispatchedEvents' => $dispatchedEvents,
+            'dispatchedEvents' => [],
         ]);
     }
 }
