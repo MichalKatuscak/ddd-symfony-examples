@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Chapter05_CQRS\Infrastructure\Persistence;
 use App\Chapter05_CQRS\Domain\Order\Order;
 use App\Chapter05_CQRS\Domain\Order\OrderId;

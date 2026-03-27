@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Chapter03_BasicConcepts\UI;
 
 use App\Chapter03_BasicConcepts\Domain\Email;

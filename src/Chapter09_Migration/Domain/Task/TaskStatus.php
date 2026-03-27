@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Chapter09_Migration\Domain\Task;
 final readonly class TaskStatus
 {

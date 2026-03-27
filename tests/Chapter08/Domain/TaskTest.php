@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Tests\Chapter08\Domain;
 use App\Chapter08_Testing\Domain\Task\Task;
 use App\Chapter08_Testing\Domain\Task\TaskId;

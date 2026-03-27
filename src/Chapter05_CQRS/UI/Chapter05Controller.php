@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Chapter05_CQRS\UI;
 use App\Chapter05_CQRS\Application\GetOrders\GetOrdersQuery;
 use App\Chapter05_CQRS\Application\PlaceOrder\PlaceOrderCommand;

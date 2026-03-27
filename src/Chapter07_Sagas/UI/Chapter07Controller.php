@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Chapter07_Sagas\UI;
 use App\Chapter07_Sagas\Application\OrderFulfillmentSaga;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;

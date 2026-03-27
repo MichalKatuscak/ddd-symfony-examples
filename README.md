@@ -6,14 +6,14 @@ Součást příručky **[DDD v Symfony](https://ddd-symfony.cz)**.
 
 ## Požadavky
 
-- PHP 8.3+
+- PHP 8.4+
 - Composer
 - [Symfony CLI](https://symfony.com/download)
 
 ## Spuštění
 
 ```bash
-git clone https://github.com/your-org/ddd-symfony-examples
+git clone https://github.com/MichalKatuscak/ddd-symfony-examples
 cd ddd-symfony-examples
 make install
 symfony server:start

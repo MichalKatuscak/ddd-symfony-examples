@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Tests\Chapter09\Domain;
 use App\Chapter09_Migration\Domain\Task\Task;
 use App\Chapter09_Migration\Domain\Task\TaskId;

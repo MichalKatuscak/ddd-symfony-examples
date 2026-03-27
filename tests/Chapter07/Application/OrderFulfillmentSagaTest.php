@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Tests\Chapter07\Application;
 use App\Chapter07_Sagas\Application\OrderFulfillmentSaga;
 use PHPUnit\Framework\TestCase;

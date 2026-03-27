@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Chapter08_Testing\Domain\Task;
 use App\Shared\Domain\AggregateRoot;
 

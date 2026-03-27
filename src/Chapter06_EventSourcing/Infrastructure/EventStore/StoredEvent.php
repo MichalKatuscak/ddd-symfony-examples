@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Chapter06_EventSourcing\Infrastructure\EventStore;
 use Doctrine\ORM\Mapping as ORM;
 

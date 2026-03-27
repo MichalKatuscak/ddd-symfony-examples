@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Chapter05\Application;
 
 use App\Chapter05_CQRS\Application\PlaceOrder\PlaceOrderCommand;

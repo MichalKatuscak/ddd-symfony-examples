@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Chapter06_EventSourcing\Domain\Order;
 final readonly class OrderId
 {

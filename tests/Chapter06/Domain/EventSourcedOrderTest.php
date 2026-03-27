@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Chapter06\Domain;
 
 use App\Chapter06_EventSourcing\Domain\Order\Events\OrderCancelled;

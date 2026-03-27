@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Chapter03_BasicConcepts\Infrastructure\Persistence;
 
 use App\Chapter03_BasicConcepts\Domain\Order\Order;

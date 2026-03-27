@@ -1,4 +1,6 @@
 <?php
+
+declare(strict_types=1);
 namespace App\Chapter07_Sagas\Application;
 
 final class OrderFulfillmentSaga
