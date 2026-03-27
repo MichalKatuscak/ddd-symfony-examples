@@ -2,7 +2,7 @@
 
 Živé, spustitelné ukázky Domain-Driven Design v Symfony 8.
 
-Součást příručky **[DDD v Symfony](https://ddd-symfony.cz)**.
+Součást příručky **[DDD v Symfony](https://ddd-v-symfony.katuscak.cz/)**.
 
 ## Požadavky
 
