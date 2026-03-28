@@ -15,4 +15,4 @@ Otevři [http://localhost:8000/examples/sagy](http://localhost:8000/examples/sag
 
 ## Odkaz na příručku
 
-[Ságy v Symfony](https://ddd-v-symfony.katuscak.cz/sagy)
+[Ságy v Symfony](https://ddd-v-symfony.katuscak.cz/sagy-a-process-managery)

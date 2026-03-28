@@ -15,4 +15,4 @@ Otevři [http://localhost:8000/examples/testovani](http://localhost:8000/example
 
 ## Odkaz na příručku
 
-[Testování DDD v Symfony](https://ddd-v-symfony.katuscak.cz/testovani)
+[Testování DDD v Symfony](https://ddd-v-symfony.katuscak.cz/testovani-ddd)

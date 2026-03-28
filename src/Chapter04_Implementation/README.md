@@ -15,4 +15,4 @@ Otevři [http://localhost:8000/examples/implementace](http://localhost:8000/exam
 
 ## Odkaz na příručku
 
-[Implementace DDD v Symfony](https://ddd-v-symfony.katuscak.cz/implementace)
+[Implementace DDD v Symfony](https://ddd-v-symfony.katuscak.cz/implementace-v-symfony)
