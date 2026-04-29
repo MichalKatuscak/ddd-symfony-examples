@@ -30,6 +30,7 @@ final class ExamplesIndexController extends AbstractController
                 ['route' => 'chapter07', 'num' => 7,  'title' => 'Ságy',                     'desc' => 'Orchestrace, kompenzační transakce'],
                 ['route' => 'chapter08', 'num' => 8,  'title' => 'Testování',                'desc' => 'Unit testy doménových tříd'],
                 ['route' => 'chapter09', 'num' => 9,  'title' => 'Migrace z CRUD',           'desc' => 'Ochrana invariantů vs. settery'],
+                ['route' => 'chapter12', 'num' => 12, 'title' => 'Méně známé vzory',         'desc' => 'Specifications, Domain Services, Factories, Modules'],
             ],
         ]);
     }

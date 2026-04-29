@@ -1,0 +1,211 @@
+{% extends 'base.html.twig' %}
+{% block title %}Ukázka: Méně známé taktické vzory{% endblock %}
+{% block body %}
+<div class="container mt-4">
+    <div class="alert alert-info">
+        Tato ukázka patří ke kapitole
+        <a href="https://ddd-v-symfony.katuscak.cz/mene-zname-vzory"><strong>Méně známé taktické vzory</strong></a>
+        — Specifications, Domain Services, Factories, Modules.
+    </div>
+    <nav class="mb-3"><a href="{{ path('examples_index') }}">← Zpět na přehled</a></nav>
+    <h1>Ukázka: čtyři méně známé taktické vzory DDD</h1>
+    <p>Každá karta níže demonstruje jeden vzor. Stav (objednávky, účty) drží <code>InMemory</code> repozitáře v paměti dev kernelu.</p>
+
+    <div class="row g-4 mt-2">
+        {# ───────────── Specification ───────────── #}
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white"><strong>1. Specification Pattern</strong></div>
+                <div class="card-body">
+                    <p class="text-muted small">Zkomponovaný predikát:
+                        <code>OrderEligibleForFreeShipping AND InEUCountry AND NotInBlacklist</code>.
+                        Práh dopravy zdarma je 1 000 CZK.</p>
+
+                    <form method="post" data-turbo="false">
+                        <input type="hidden" name="action" value="promo">
+                        <div class="mb-2">
+                            <label class="form-label small">Cílová země (ISO kód)</label>
+                            <input type="text" name="country" value="CZ" maxlength="2" class="form-control">
+                            <div class="form-text small">Vyzkoušejte CZ (EU), US (mimo EU), KP (blacklist).</div>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Hodnota objednávky (CZK)</label>
+                            <input type="number" name="total" value="1500" min="1" class="form-control">
+                        </div>
+                        <button class="btn btn-primary btn-sm">Vyhodnotit promo akci</button>
+                    </form>
+
+                    {% if promo_error %}
+                        <div class="alert alert-danger mt-3 mb-0 small">{{ promo_error }}</div>
+                    {% endif %}
+                    {% if promo_result %}
+                        <div class="alert alert-secondary mt-3 mb-0 small">
+                            <div><strong>Objednávka:</strong> {{ promo_result.orderTotalFormatted }} → {{ promo_result.shippingCountry }}</div>
+                            <ul class="list-unstyled mb-0">
+                                <li>Nad prahem dopravy zdarma: <strong>{{ promo_result.aboveFreeShippingThreshold ? 'ANO' : 'NE' }}</strong></li>
+                                <li>Cílí do EU: <strong>{{ promo_result.shipsToEU ? 'ANO' : 'NE' }}</strong></li>
+                                <li>Není na blacklistu: <strong>{{ promo_result.notInBlacklist ? 'ANO' : 'NE' }}</strong></li>
+                            </ul>
+                            <div class="mt-2">
+                                Výsledná specifikace:
+                                {% if promo_result.eligible %}
+                                    <span class="badge bg-success">SPLŇUJE</span>
+                                {% else %}
+                                    <span class="badge bg-danger">NESPLŇUJE</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# ───────────── Domain Service ───────────── #}
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white"><strong>2. Domain Service</strong></div>
+                <div class="card-body">
+                    <p class="text-muted small"><code>MoneyTransferService</code> přijímá oba účty parametrem a koordinuje
+                        <code>$from-&gt;withdraw()</code> + <code>$to-&gt;deposit()</code>. Účet sám sebe nemůže "převést jinam".</p>
+
+                    <table class="table table-sm small">
+                        <thead><tr><th>Účet</th><th>Zůstatek</th></tr></thead>
+                        <tbody>
+                        {% for acc in accounts %}
+                            <tr><td><code>{{ acc.id }}</code></td><td>{{ acc.balance.formatted }}</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <form method="post" data-turbo="false">
+                        <input type="hidden" name="action" value="transfer">
+                        <div class="mb-2">
+                            <label class="form-label small">Převést z <code>acc-from</code> na <code>acc-to</code> (CZK)</label>
+                            <input type="number" name="amount" value="100" min="1" class="form-control">
+                        </div>
+                        <button class="btn btn-success btn-sm">Provést převod</button>
+                    </form>
+
+                    {% if transfer_error %}
+                        <div class="alert alert-danger mt-3 mb-0 small">{{ transfer_error }}</div>
+                    {% endif %}
+                    {% if transfer_result %}
+                        <div class="alert alert-secondary mt-3 mb-0 small">
+                            Převedeno {{ transfer_result.amount }}.<br>
+                            <code>acc-from</code>: {{ transfer_result.fromBalance }}<br>
+                            <code>acc-to</code>: {{ transfer_result.toBalance }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# ───────────── Factory ───────────── #}
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-warning"><strong>3. Factory (class)</strong></div>
+                <div class="card-body">
+                    <p class="text-muted small"><code>OrderFromCartFactory</code> má v konstruktoru tři DI kolaboranty
+                        (<code>CartRepository</code>, <code>CustomerRepository</code>, <code>PricingService</code>) — proto
+                        nestačí statická metoda na agregátu. Uvnitř volá <code>Order::place()</code>, takže invariant
+                        "alespoň 1 položka" zůstává v agregátu.</p>
+
+                    <form method="post" data-turbo="false">
+                        <input type="hidden" name="action" value="factory">
+                        <div class="mb-2">
+                            <label class="form-label small">Cena položky (CZK, 2 ks)</label>
+                            <input type="number" name="price" value="500" min="1" class="form-control">
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" id="premium" name="premium" value="1">
+                            <label class="form-check-label small" for="premium">Premium zákazník (sleva 10 %)</label>
+                        </div>
+                        <button class="btn btn-warning btn-sm">Vytvořit Order z košíku</button>
+                    </form>
+
+                    {% if factory_error %}
+                        <div class="alert alert-danger mt-3 mb-0 small">{{ factory_error }}</div>
+                    {% endif %}
+                    {% if factory_result %}
+                        <div class="alert alert-secondary mt-3 mb-0 small">
+                            Order ID: <code>{{ factory_result.orderId }}</code><br>
+                            Položek: {{ factory_result.itemCount }}<br>
+                            Celkem: <strong>{{ factory_result.total }}</strong>
+                            {% if factory_result.premium %}<span class="badge bg-info ms-2">Premium</span>{% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# ───────────── Modules ───────────── #}
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-secondary text-white"><strong>4. Modules</strong></div>
+                <div class="card-body">
+                    <p class="text-muted small">Tato ukázka je sama svým modulem: adresářová struktura
+                        <code>src/Chapter12_LesserPatterns/{Domain, Application, Infrastructure, UI}</code>
+                        odráží Bounded Context, ne technickou roli souborů.</p>
+
+                    <pre class="bg-light p-2 rounded small mb-2">src/Chapter12_LesserPatterns/
+  Domain/
+    Specification/  ← prvotřídní predikáty
+    Order/          ← agregát + concrete specs
+    Customer/
+    Service/        ← Domain Service (MoneyTransferService)
+  Application/
+    PlaceOrder/
+    EvaluatePromo/  ← skládá specifikace
+    Factory/        ← OrderFromCartFactory
+  Infrastructure/   ← in-memory repos
+  UI/               ← Chapter12Controller</pre>
+
+                    <p class="small mb-1"><strong>Anti-vzor</strong>, kterému se vyhýbáme:</p>
+                    <pre class="bg-light p-2 rounded small mb-0">src/
+  Entity/      ← všechny entity dohromady
+  Service/     ← všechno ostatní
+  Repository/  ← všechny repozitáře</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="my-5">
+    <h2>Kdy který vzor použít?</h2>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card h-100"><div class="card-body small">
+                <h5>Specification</h5>
+                <p>Když pravidlo ANO/NE vzniká kompozicí podpravidel a chcete ho jak vyhodnocovat in-memory, tak překládat na SQL kritérium (double-dispatch).</p>
+            </div></div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100"><div class="card-body small">
+                <h5>Domain Service</h5>
+                <p>Když operace nemá přirozeného vlastníka mezi entitami a operuje nad více agregáty zároveň. Stateless, bez perzistenčních volání.</p>
+            </div></div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100"><div class="card-body small">
+                <h5>Factory</h5>
+                <p>Static metoda na agregátu (<code>::place()</code>) preferovaná. Factory class jen tehdy, když vznik potřebuje DI závislosti, které static metoda nemůže přijmout.</p>
+            </div></div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100"><div class="card-body small">
+                <h5>Module</h5>
+                <p>Adresáře pojmenované podle ubiquitous language, ne podle technické role. 1 modul = 1 Bounded Context.</p>
+            </div></div>
+        </div>
+    </div>
+
+    <nav class="d-flex justify-content-between mt-5 pt-3 border-top">
+        {% if prev_route is defined and prev_route %}
+            <a href="{{ path(prev_route) }}">← {{ prev_title }}</a>
+        {% else %}<span></span>{% endif %}
+        {% if next_route is defined and next_route %}
+            <a href="{{ path(next_route) }}">{{ next_title }} →</a>
+        {% else %}<span></span>{% endif %}
+    </nav>
+</div>
+{% endblock %}
