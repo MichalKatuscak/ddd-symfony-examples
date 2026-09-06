@@ -13,6 +13,12 @@ Otevři [http://localhost:8000/examples/cqrs](http://localhost:8000/examples/cqr
 - DBAL read model — přímé SQL dotazy pro čtení, bez Doctrine ORM overhead
 - Proč CQRS zjednodušuje škálování a optimalizaci výkonu
 
+## Proč je tu identita jako řetězec
+
+Stejné zjednodušení jako v kapitole o implementaci: `id` je skalár a getter z něj
+sestaví `OrderId`. Kanonickou podobu ukazuje
+[Chapter02_AggregateDesign](../Chapter02_AggregateDesign).
+
 ## Odkaz na příručku
 
 [CQRS v Symfony](https://ddd-v-symfony.katuscak.cz/cqrs)

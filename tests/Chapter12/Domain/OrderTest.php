@@ -31,7 +31,7 @@ final class OrderTest extends TestCase
         $events = $order->releaseEvents();
         $this->assertCount(1, $events);
         $this->assertInstanceOf(OrderPlaced::class, $events[0]);
-        $this->assertSame($order->id()->value, $events[0]->orderId->value);
+        $this->assertSame($order->id->value, $events[0]->orderId->value);
     }
 
     public function test_static_factory_rejects_empty_items(): void

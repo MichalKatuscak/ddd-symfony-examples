@@ -13,6 +13,13 @@ Otevři [http://localhost:8000/examples/event-sourcing](http://localhost:8000/ex
 - Projekce — odvozené read modely aktualizované z event streamu
 - Optimistické zamykání — ochrana před souběžnými zápisy pomocí verze streamu
 
+## Proč se agregát liší
+
+Event-sourcovaný agregát se rekonstruuje z proudu událostí, takže drží stav
+jako skaláry a nemá pojmenované stavové přechody jako kanonická verze
+z [kapitoly o návrhu agregátu](../Chapter02_AggregateDesign). Rozdíl je záměrný,
+ne nedodělek.
+
 ## Odkaz na příručku
 
 [Event Sourcing v Symfony](https://ddd-v-symfony.katuscak.cz/event-sourcing)

@@ -21,7 +21,7 @@ final class Order extends AggregateRoot
 
     /** @param list<OrderItem> $items */
     private function __construct(
-        private readonly OrderId $id,
+        public readonly OrderId $id,
         private readonly CustomerId $customerId,
         array $items,
         private readonly string $shippingCountry,
@@ -60,11 +60,6 @@ final class Order extends AggregateRoot
         ));
 
         return $order;
-    }
-
-    public function id(): OrderId
-    {
-        return $this->id;
     }
 
     public function customerId(): CustomerId
