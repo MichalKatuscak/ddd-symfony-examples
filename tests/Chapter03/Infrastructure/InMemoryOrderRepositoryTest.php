@@ -7,6 +7,7 @@ namespace App\Tests\Chapter03\Infrastructure;
 use App\Chapter03_BasicConcepts\Domain\Order\ProductId;
 use App\Shared\Domain\Currency;
 use App\Chapter03_BasicConcepts\Domain\Order\Money;
+use App\Chapter03_BasicConcepts\Domain\Order\CustomerId;
 use App\Chapter03_BasicConcepts\Domain\Order\Order;
 use App\Chapter03_BasicConcepts\Domain\Order\OrderId;
 use App\Chapter03_BasicConcepts\Infrastructure\Persistence\InMemoryOrderRepository;
@@ -24,7 +25,7 @@ final class InMemoryOrderRepositoryTest extends TestCase
     public function test_save_and_find_by_id_roundtrip(): void
     {
         $id = OrderId::generate();
-        $order = Order::place($id, 'zákazník-1');
+        $order = Order::place($id, CustomerId::fromString('zákazník-1'));
         $order->addItem(ProductId::generate(), 1, new Money(10000, Currency::CZK));
 
         $this->repository->save($order);
@@ -41,10 +42,10 @@ final class InMemoryOrderRepositoryTest extends TestCase
 
     public function test_find_all_returns_all_saved_orders(): void
     {
-        $order1 = Order::place(OrderId::generate(), 'zákazník-1');
+        $order1 = Order::place(OrderId::generate(), CustomerId::fromString('zákazník-1'));
         $order1->addItem(ProductId::generate(), 1, new Money(10000, Currency::CZK));
 
-        $order2 = Order::place(OrderId::generate(), 'zákazník-2');
+        $order2 = Order::place(OrderId::generate(), CustomerId::fromString('zákazník-2'));
         $order2->addItem(ProductId::generate(), 2, new Money(5000, Currency::CZK));
 
         $this->repository->save($order1);
@@ -63,7 +64,7 @@ final class InMemoryOrderRepositoryTest extends TestCase
 
     public function test_saving_same_order_twice_does_not_duplicate(): void
     {
-        $order = Order::place(OrderId::generate(), 'zákazník-1');
+        $order = Order::place(OrderId::generate(), CustomerId::fromString('zákazník-1'));
         $order->addItem(ProductId::generate(), 1, new Money(10000, Currency::CZK));
 
         $this->repository->save($order);

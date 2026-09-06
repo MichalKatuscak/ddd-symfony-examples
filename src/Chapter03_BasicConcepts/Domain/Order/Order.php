@@ -22,12 +22,12 @@ final class Order extends AggregateRoot
 
     private function __construct(
         public readonly OrderId $id,
-        public readonly string $customerId,
+        public readonly CustomerId $customerId,
     ) {
         $this->status = OrderStatus::Draft;
     }
 
-    public static function place(OrderId $id, string $customerId): self
+    public static function place(OrderId $id, CustomerId $customerId): self
     {
         return new self($id, $customerId);
     }

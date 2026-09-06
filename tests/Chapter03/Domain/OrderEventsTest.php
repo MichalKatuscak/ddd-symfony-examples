@@ -9,6 +9,7 @@ use App\Shared\Domain\Currency;
 use App\Chapter03_BasicConcepts\Domain\Order\Events\OrderConfirmed;
 use App\Chapter03_BasicConcepts\Domain\Order\Events\OrderItemAdded;
 use App\Chapter03_BasicConcepts\Domain\Order\Money;
+use App\Chapter03_BasicConcepts\Domain\Order\CustomerId;
 use App\Chapter03_BasicConcepts\Domain\Order\Order;
 use App\Chapter03_BasicConcepts\Domain\Order\OrderId;
 use PHPUnit\Framework\TestCase;
@@ -17,7 +18,7 @@ class OrderEventsTest extends TestCase
 {
     public function testAddItemRecordsEvent(): void
     {
-        $order = Order::place(OrderId::generate(), 'student-1');
+        $order = Order::place(OrderId::generate(), CustomerId::fromString('student-1'));
         $order->addItem(ProductId::generate(), 2, new Money(59900, Currency::CZK));
 
         $events = $order->releaseEvents();
@@ -30,7 +31,7 @@ class OrderEventsTest extends TestCase
 
     public function testConfirmRecordsEvent(): void
     {
-        $order = Order::place(OrderId::generate(), 'student-1');
+        $order = Order::place(OrderId::generate(), CustomerId::fromString('student-1'));
         $order->addItem(ProductId::generate(), 1, new Money(59900, Currency::CZK));
         $order->releaseEvents(); // clear addItem event
 
