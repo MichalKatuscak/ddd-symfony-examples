@@ -12,6 +12,8 @@ doctrine:
                 class: App\Chapter04_Implementation\Infrastructure\Doctrine\OrderIdType
             ch04_money_amount:
                 class: App\Chapter04_Implementation\Infrastructure\Doctrine\MoneyAmountType
+            ch05_order_id:
+                class: App\Chapter05_CQRS\Infrastructure\Doctrine\OrderIdType
     orm:
         validate_xml_mapping: true
         naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware

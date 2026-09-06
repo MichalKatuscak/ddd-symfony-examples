@@ -40,6 +40,6 @@ final class PlaceOrderHandlerTest extends TestCase
 
         $this->assertNotEmpty($orderId);
         $this->assertNotNull($repo->saved);
-        $this->assertSame($orderId, $repo->saved->id()->value);
+        $this->assertSame($orderId, $repo->saved->id->value);
     }
 }

@@ -80,7 +80,7 @@ final class PlaceOrderHandlerTest extends TestCase
         ));
 
         $this->assertNotNull($repo->saved);
-        $this->assertSame($orderId, $repo->saved->id()->value);
+        $this->assertSame($orderId, $repo->saved->id->value);
     }
 
     public function test_domain_events_are_dispatched(): void

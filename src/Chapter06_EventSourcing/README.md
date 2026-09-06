@@ -15,10 +15,10 @@ Otevři [http://localhost:8000/examples/event-sourcing](http://localhost:8000/ex
 
 ## Proč se agregát liší
 
-Event-sourcovaný agregát se rekonstruuje z proudu událostí, takže drží stav
-jako skaláry a nemá pojmenované stavové přechody jako kanonická verze
-z [kapitoly o návrhu agregátu](../Chapter02_AggregateDesign). Rozdíl je záměrný,
-ne nedodělek.
+Event-sourcovaný agregát nedrží stav, ale odvozuje ho přehráním událostí. Proto
+má jinou stavbu než kanonická verze z
+[kapitoly o návrhu agregátu](../Chapter02_AggregateDesign): stav je vedlejší produkt
+přehrání, ne to, co se ukládá. Rozdíl je vlastnost vzoru, ne zjednodušení ukázky.
 
 ## Odkaz na příručku
 

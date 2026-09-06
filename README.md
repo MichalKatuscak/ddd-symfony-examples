@@ -46,6 +46,5 @@ Ukázky sledují kanonické konvence příručky: `AggregateRoot` s `record()`
 a `releaseEvents()`, identita jako hodnotový objekt, `Money` s `amountInCents`
 a `Currency`, doménová pravidla jako pojmenované výjimky.
 
-Kde se ukázka záměrně liší — zjednodušená identita, event-sourcovaný agregát,
-synchronní orchestrátor místo posluchače událostí — říká to README příslušné
-kapitoly.
+Kde se ukázka liší — event-sourcovaný agregát odvozuje stav z událostí, sága volá
+kroky synchronně za sebou — říká to README příslušné kapitoly a vždy s důvodem.
