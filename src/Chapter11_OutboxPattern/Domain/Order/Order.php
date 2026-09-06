@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Chapter11_OutboxPattern\Domain\Order;
 
+use App\Chapter11_OutboxPattern\Domain\Order\Exception\OrderAlreadyCancelledException;
 use App\Shared\Domain\AggregateRoot;
 use Symfony\Component\Uid\Uuid;
 
@@ -42,7 +43,7 @@ final class Order extends AggregateRoot
     public function cancel(string $reason): void
     {
         if ($this->status === OrderStatus::Cancelled) {
-            throw new \DomainException('Order is already cancelled');
+            throw OrderAlreadyCancelledException::withId($this->id->value);
         }
 
         $this->status = OrderStatus::Cancelled;

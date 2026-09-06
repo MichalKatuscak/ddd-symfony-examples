@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Chapter12_LesserPatterns\Domain\Order;
 
+use App\Chapter12_LesserPatterns\Domain\Exception\CurrencyMismatchException;
 use App\Shared\Domain\Currency;
 
 final readonly class Money
@@ -29,7 +30,7 @@ final readonly class Money
         $this->assertSameCurrency($other);
 
         if ($other->amountInCents > $this->amountInCents) {
-            throw new \DomainException('Cannot subtract — would result in negative amount');
+            throw CurrencyMismatchException::cannotSubtract();
         }
 
         return new self($this->amountInCents - $other->amountInCents, $this->currency);

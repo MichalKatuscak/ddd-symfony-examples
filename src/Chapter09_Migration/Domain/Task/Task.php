@@ -3,6 +3,7 @@
 declare(strict_types=1);
 namespace App\Chapter09_Migration\Domain\Task;
 
+use App\Chapter09_Migration\Domain\Task\Exception\InvalidTaskStateTransitionException;
 final class Task
 {
     private TaskStatus $status;
@@ -27,7 +28,7 @@ final class Task
     public function start(string $memberId): void
     {
         if ($this->status !== TaskStatus::Todo) {
-            throw new \DomainException('Task is already started or done');
+            throw InvalidTaskStateTransitionException::cannotStart();
         }
         $this->assignedTo = $memberId;
         $this->status = TaskStatus::InProgress;
@@ -36,7 +37,7 @@ final class Task
     public function complete(): void
     {
         if ($this->status !== TaskStatus::InProgress) {
-            throw new \DomainException('Task must be in progress before completing');
+            throw InvalidTaskStateTransitionException::cannotComplete();
         }
         $this->status = TaskStatus::Done;
     }

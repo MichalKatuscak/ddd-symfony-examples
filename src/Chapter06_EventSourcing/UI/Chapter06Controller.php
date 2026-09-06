@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Chapter06_EventSourcing\UI;
 
+use App\Chapter06_EventSourcing\Domain\Order\Exception\OrderNotFoundException;
 use App\Chapter06_EventSourcing\Domain\Order\ConcurrencyException;
 use App\Chapter06_EventSourcing\Domain\Order\Order;
 use App\Chapter06_EventSourcing\Domain\Order\OrderId;
@@ -50,7 +51,7 @@ final class Chapter06Controller extends AbstractController
                 } elseif ($action === 'confirm') {
                     $events = $this->eventStore->load($orderId);
                     if (empty($events)) {
-                        throw new \DomainException('Objednávka neexistuje: ' . $orderId);
+                        throw OrderNotFoundException::withId($orderId);
                     }
                     $version = count($events);
                     $order = Order::reconstruct(new OrderId($orderId), $events);
@@ -62,7 +63,7 @@ final class Chapter06Controller extends AbstractController
                 } elseif ($action === 'cancel') {
                     $events = $this->eventStore->load($orderId);
                     if (empty($events)) {
-                        throw new \DomainException('Objednávka neexistuje: ' . $orderId);
+                        throw OrderNotFoundException::withId($orderId);
                     }
                     $version = count($events);
                     $order = Order::reconstruct(new OrderId($orderId), $events);

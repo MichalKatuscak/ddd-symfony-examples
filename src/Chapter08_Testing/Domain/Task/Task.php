@@ -2,7 +2,8 @@
 
 declare(strict_types=1);
 namespace App\Chapter08_Testing\Domain\Task;
-use App\Shared\Domain\AggregateRoot;
+
+use App\Chapter08_Testing\Domain\Task\Exception\InvalidTaskStateTransitionException;use App\Shared\Domain\AggregateRoot;
 
 final class Task extends AggregateRoot
 {
@@ -28,7 +29,7 @@ final class Task extends AggregateRoot
     public function assignTo(string $memberId): void
     {
         if ($this->status === TaskStatus::Done) {
-            throw new \DomainException('Cannot reassign a completed task');
+            throw InvalidTaskStateTransitionException::cannotReassign();
         }
         $this->assignedTo = $memberId;
         $this->status = TaskStatus::InProgress;
@@ -38,7 +39,7 @@ final class Task extends AggregateRoot
     public function complete(): void
     {
         if ($this->status !== TaskStatus::InProgress) {
-            throw new \DomainException('Task must be in progress before completing');
+            throw InvalidTaskStateTransitionException::cannotComplete();
         }
         $this->status = TaskStatus::Done;
     }
