@@ -6,7 +6,7 @@ namespace App\Chapter04_Implementation\Domain\Order;
 
 enum OrderStatus: string
 {
-    case Pending = 'pending';
+    case Draft = 'draft';
     case Confirmed = 'confirmed';
     case Cancelled = 'cancelled';
 }

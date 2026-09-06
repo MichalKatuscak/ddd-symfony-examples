@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Chapter04\Domain;
 
+use App\Shared\Domain\Currency;
 use App\Chapter04_Implementation\Domain\Order\Money;
 use App\Chapter04_Implementation\Domain\Order\Order;
 use App\Chapter04_Implementation\Domain\Order\OrderId;
@@ -19,7 +20,7 @@ final class MinimumOrderAmountSpecificationTest extends TestCase
         $order = Order::place(
             OrderId::generate(),
             'customer-1',
-            [new OrderLine('Produkt', 2, new Money(10000, 'CZK'))], // 200 CZK
+            [new OrderLine('Produkt', 2, new Money(10000, Currency::CZK))], // 200 CZK
         );
 
         $this->assertTrue($spec->isSatisfiedBy($order));
@@ -31,7 +32,7 @@ final class MinimumOrderAmountSpecificationTest extends TestCase
         $order = Order::place(
             OrderId::generate(),
             'customer-1',
-            [new OrderLine('Produkt', 1, new Money(10000, 'CZK'))], // 100 CZK
+            [new OrderLine('Produkt', 1, new Money(10000, Currency::CZK))], // 100 CZK
         );
 
         $this->assertFalse($spec->isSatisfiedBy($order));
@@ -43,7 +44,7 @@ final class MinimumOrderAmountSpecificationTest extends TestCase
         $order = Order::place(
             OrderId::generate(),
             'customer-1',
-            [new OrderLine('Produkt', 1, new Money(10000, 'CZK'))],
+            [new OrderLine('Produkt', 1, new Money(10000, Currency::CZK))],
         );
 
         $this->assertTrue($spec->isSatisfiedBy($order));

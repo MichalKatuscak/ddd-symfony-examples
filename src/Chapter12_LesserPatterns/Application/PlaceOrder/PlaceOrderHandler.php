@@ -43,6 +43,6 @@ final class PlaceOrderHandler
 
         $this->orders->save($order);
 
-        return $order->id()->value;
+        return $order->id->value;
     }
 }

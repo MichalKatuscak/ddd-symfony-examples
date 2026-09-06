@@ -3,13 +3,14 @@
 declare(strict_types=1);
 namespace App\Chapter09_Migration\Domain\Task;
 
+use App\Chapter09_Migration\Domain\Task\Exception\InvalidTaskStateTransitionException;
 final class Task
 {
     private TaskStatus $status;
     private ?string $assignedTo = null;
 
     private function __construct(
-        private readonly TaskId $id,
+        public readonly TaskId $id,
         private readonly string $title,
         private readonly string $projectId,
     ) {
@@ -27,7 +28,7 @@ final class Task
     public function start(string $memberId): void
     {
         if ($this->status !== TaskStatus::Todo) {
-            throw new \DomainException('Task is already started or done');
+            throw InvalidTaskStateTransitionException::cannotStart();
         }
         $this->assignedTo = $memberId;
         $this->status = TaskStatus::InProgress;
@@ -36,12 +37,11 @@ final class Task
     public function complete(): void
     {
         if ($this->status !== TaskStatus::InProgress) {
-            throw new \DomainException('Task must be in progress before completing');
+            throw InvalidTaskStateTransitionException::cannotComplete();
         }
         $this->status = TaskStatus::Done;
     }
 
-    public function id(): TaskId { return $this->id; }
     public function title(): string { return $this->title; }
     public function status(): TaskStatus { return $this->status; }
     public function assignedTo(): ?string { return $this->assignedTo; }

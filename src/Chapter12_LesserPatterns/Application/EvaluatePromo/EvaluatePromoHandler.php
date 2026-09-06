@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Chapter12_LesserPatterns\Application\EvaluatePromo;
 
+use App\Chapter12_LesserPatterns\Domain\Exception\OrderNotFoundException;
 use App\Chapter12_LesserPatterns\Domain\Order\InEUCountry;
 use App\Chapter12_LesserPatterns\Domain\Order\Money;
 use App\Chapter12_LesserPatterns\Domain\Order\NotInBlacklist;
@@ -30,7 +31,7 @@ final class EvaluatePromoHandler
     public function __invoke(EvaluatePromoCommand $command): EvaluatePromoResult
     {
         $order = $this->orders->findById(new OrderId($command->orderId))
-            ?? throw new \DomainException(sprintf('Order %s not found', $command->orderId));
+            ?? throw OrderNotFoundException::withId($command->orderId);
 
         $eligibleForFreeShipping = new OrderEligibleForFreeShipping(
             new Money($command->freeShippingThresholdMinorUnits),
@@ -48,7 +49,7 @@ final class EvaluatePromoHandler
             aboveFreeShippingThreshold: $eligibleForFreeShipping->isSatisfiedBy($order),
             shipsToEU: $inEU->isSatisfiedBy($order),
             notInBlacklist: $notInBlacklist->isSatisfiedBy($order),
-            orderTotalFormatted: $order->total()->formatted(),
+            orderTotalFormatted: $order->totalAmount()->formatted(),
             shippingCountry: $order->shippingCountry(),
         );
     }

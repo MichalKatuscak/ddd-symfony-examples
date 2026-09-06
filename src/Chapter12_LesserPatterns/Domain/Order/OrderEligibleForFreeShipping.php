@@ -24,6 +24,6 @@ final class OrderEligibleForFreeShipping extends CompositeSpecification
             return false;
         }
 
-        return $candidate->total()->isGreaterThanOrEqual($this->threshold);
+        return $candidate->totalAmount()->isGreaterThanOrEqual($this->threshold);
     }
 }

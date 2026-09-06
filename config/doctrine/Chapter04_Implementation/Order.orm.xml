@@ -7,7 +7,7 @@
     <entity name="App\Chapter04_Implementation\Domain\Order\Order"
             table="ch04_orders">
 
-        <id name="id" type="string" length="36"/>
+        <id name="id" type="ch04_order_id" length="36"/>
 
         <field name="customerId" column="customer_id" type="string"/>
         <field name="totalAmount" column="total_amount" type="integer"/>

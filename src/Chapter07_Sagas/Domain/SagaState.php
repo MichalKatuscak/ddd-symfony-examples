@@ -13,4 +13,13 @@ enum SagaState: string
     case Compensating = 'compensating';
     case Failed = 'failed';
     case Completed = 'completed';
+
+    /**
+     * Z terminálního stavu už sága nikam nepokračuje. Opožděná událost
+     * ji nesmí vzkřísit – proto se na tuhle otázku ptá každý krok.
+     */
+    public function isTerminal(): bool
+    {
+        return $this === self::Completed || $this === self::Failed;
+    }
 }

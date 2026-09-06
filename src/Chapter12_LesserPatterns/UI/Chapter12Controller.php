@@ -173,8 +173,8 @@ final class Chapter12Controller extends AbstractController
             $this->orders->save($order);
 
             return [[
-                'orderId' => substr($order->id()->value, 0, 8) . '…',
-                'total' => $order->total()->formatted(),
+                'orderId' => substr($order->id->value, 0, 8) . '…',
+                'total' => $order->totalAmount()->formatted(),
                 'premium' => $premium,
                 'itemCount' => count($order->items()),
             ], null];

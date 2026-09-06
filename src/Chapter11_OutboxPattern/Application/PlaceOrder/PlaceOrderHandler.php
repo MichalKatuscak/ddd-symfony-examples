@@ -18,7 +18,7 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
  *
  *   $em->wrapInTransaction(function () use ($order, $outbox): void {
  *       $em->persist($order);
- *       foreach ($order->pullEvents() as $event) {
+ *       foreach ($order->releaseEvents() as $event) {
  *           $outbox->save(OutboxMessage::fromEvent($event));
  *       }
  *   });
@@ -45,7 +45,7 @@ final readonly class PlaceOrderHandler
             $order = Order::place($id, $command->customerId, $command->amount);
             $this->orders->save($order);
 
-            foreach ($order->pullEvents() as $event) {
+            foreach ($order->releaseEvents() as $event) {
                 // Místo přímého $bus->dispatch($event) zapíšeme zprávu do
                 // outbox tabulky. Stejné DB spojení = stejná transakce.
                 $this->outbox->save(OutboxMessage::fromEvent($event));

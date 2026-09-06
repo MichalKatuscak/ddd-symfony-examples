@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace App\Chapter12_LesserPatterns\Domain\Order;
 
+use App\Chapter12_LesserPatterns\Domain\Exception\CurrencyMismatchException;
+use App\Shared\Domain\Currency;
+
 final readonly class Money
 {
     public function __construct(
-        public int $amount,
-        public string $currency = 'CZK',
+        public int $amountInCents,
+        public Currency $currency = Currency::CZK,
     ) {
-        if ($amount < 0) {
+        if ($amountInCents < 0) {
             throw new \InvalidArgumentException('Money amount cannot be negative');
         }
     }
@@ -19,35 +22,35 @@ final readonly class Money
     {
         $this->assertSameCurrency($other);
 
-        return new self($this->amount + $other->amount, $this->currency);
+        return new self($this->amountInCents + $other->amountInCents, $this->currency);
     }
 
     public function subtract(self $other): self
     {
         $this->assertSameCurrency($other);
 
-        if ($other->amount > $this->amount) {
-            throw new \DomainException('Cannot subtract — would result in negative amount');
+        if ($other->amountInCents > $this->amountInCents) {
+            throw CurrencyMismatchException::cannotSubtract();
         }
 
-        return new self($this->amount - $other->amount, $this->currency);
+        return new self($this->amountInCents - $other->amountInCents, $this->currency);
     }
 
     public function multiply(int $qty): self
     {
-        return new self($this->amount * $qty, $this->currency);
+        return new self($this->amountInCents * $qty, $this->currency);
     }
 
     public function isGreaterThanOrEqual(self $other): bool
     {
         $this->assertSameCurrency($other);
 
-        return $this->amount >= $other->amount;
+        return $this->amountInCents >= $other->amountInCents;
     }
 
     public function formatted(): string
     {
-        return number_format($this->amount / 100, 2) . ' ' . $this->currency;
+        return number_format($this->amountInCents / 100, 2) . ' ' . $this->currency->value;
     }
 
     private function assertSameCurrency(self $other): void

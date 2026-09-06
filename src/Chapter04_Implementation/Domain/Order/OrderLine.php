@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Chapter04_Implementation\Domain\Order;
 
+use App\Shared\Domain\Currency;
 final readonly class OrderLine
 {
     public function __construct(
@@ -30,7 +31,7 @@ final readonly class OrderLine
         return [
             'name' => $this->productName,
             'qty' => $this->quantity,
-            'price' => $this->unitPrice->amount,
+            'price' => $this->unitPrice->amountInCents,
         ];
     }
 
@@ -40,7 +41,7 @@ final readonly class OrderLine
         return new self(
             $data['name'],
             $data['qty'],
-            new Money($data['price'], 'CZK'),
+            new Money($data['price'], Currency::CZK),
         );
     }
 }

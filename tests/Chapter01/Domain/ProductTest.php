@@ -17,7 +17,7 @@ final class ProductTest extends TestCase
         $price = new Price(59900, 'CZK');
         $product = new Product($id, 'Symfony kniha', $price);
 
-        $this->assertSame($id, $product->id());
+        $this->assertSame($id, $product->id);
         $this->assertSame('Symfony kniha', $product->name());
         $this->assertSame($price, $product->price());
     }
@@ -28,7 +28,7 @@ final class ProductTest extends TestCase
         $price = new Price(29900, 'EUR');
         $product = new Product($id, 'DDD kniha', $price);
 
-        $this->assertSame('prod-42', $product->id()->value);
+        $this->assertSame('prod-42', $product->id->value);
         $this->assertSame('DDD kniha', $product->name());
         $this->assertSame(29900, $product->price()->amount);
         $this->assertSame('EUR', $product->price()->currency);

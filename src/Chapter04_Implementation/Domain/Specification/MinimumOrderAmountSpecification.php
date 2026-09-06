@@ -14,6 +14,6 @@ final readonly class MinimumOrderAmountSpecification
 
     public function isSatisfiedBy(Order $order): bool
     {
-        return $order->total()->amount >= $this->minimumAmountCents;
+        return $order->totalAmount()->amountInCents >= $this->minimumAmountCents;
     }
 }

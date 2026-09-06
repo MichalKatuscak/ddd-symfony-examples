@@ -3,6 +3,7 @@
 declare(strict_types=1);
 namespace App\Chapter06_EventSourcing\Domain\Order;
 
+use App\Chapter06_EventSourcing\Domain\Order\Exception\InvalidOrderStateTransitionException;
 use App\Chapter06_EventSourcing\Domain\Order\Events\OrderCancelled;
 use App\Chapter06_EventSourcing\Domain\Order\Events\OrderConfirmed;
 use App\Chapter06_EventSourcing\Domain\Order\Events\OrderPlaced;
@@ -16,7 +17,7 @@ final class Order
     /** @var DomainEvent[] */
     private array $uncommittedEvents = [];
 
-    private function __construct(private readonly OrderId $id) {}
+    private function __construct(public readonly OrderId $id) {}
 
     public static function place(OrderId $id, string $customerId, int $totalAmount): self
     {
@@ -40,7 +41,7 @@ final class Order
     public function confirm(): void
     {
         if ($this->status !== 'pending') {
-            throw new \DomainException('Cannot confirm order in status: ' . $this->status);
+            throw InvalidOrderStateTransitionException::cannotTransition($this->status, 'confirmed');
         }
         $event = new OrderConfirmed($this->id->value);
         $this->apply($event);
@@ -50,7 +51,7 @@ final class Order
     public function cancel(string $reason): void
     {
         if ($this->status !== 'pending') {
-            throw new \DomainException('Cannot cancel order in status: ' . $this->status);
+            throw InvalidOrderStateTransitionException::cannotTransition($this->status, 'cancelled');
         }
         $event = new OrderCancelled($this->id->value, $reason);
         $this->apply($event);
@@ -71,7 +72,6 @@ final class Order
         };
     }
 
-    public function id(): OrderId { return $this->id; }
     public function status(): string { return $this->status; }
     public function totalAmount(): int { return $this->totalAmount; }
     public function customerId(): string { return $this->customerId; }

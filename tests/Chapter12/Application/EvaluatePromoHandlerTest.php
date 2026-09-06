@@ -23,7 +23,7 @@ final class EvaluatePromoHandlerTest extends TestCase
 
         $handler = new EvaluatePromoHandler($repo);
         $result = ($handler)(new EvaluatePromoCommand(
-            orderId: $order->id()->value,
+            orderId: $order->id->value,
             freeShippingThresholdMinorUnits: 100_000,
         ));
 
@@ -41,7 +41,7 @@ final class EvaluatePromoHandlerTest extends TestCase
 
         $handler = new EvaluatePromoHandler($repo);
         $result = ($handler)(new EvaluatePromoCommand(
-            orderId: $order->id()->value,
+            orderId: $order->id->value,
             freeShippingThresholdMinorUnits: 100_000,
         ));
 
@@ -59,7 +59,7 @@ final class EvaluatePromoHandlerTest extends TestCase
 
         $handler = new EvaluatePromoHandler($repo);
         $result = ($handler)(new EvaluatePromoCommand(
-            orderId: $order->id()->value,
+            orderId: $order->id->value,
             freeShippingThresholdMinorUnits: 100_000,
         ));
 
@@ -75,7 +75,7 @@ final class EvaluatePromoHandlerTest extends TestCase
 
         $handler = new EvaluatePromoHandler($repo);
         $result = ($handler)(new EvaluatePromoCommand(
-            orderId: $order->id()->value,
+            orderId: $order->id->value,
             freeShippingThresholdMinorUnits: 100_000,
         ));
 

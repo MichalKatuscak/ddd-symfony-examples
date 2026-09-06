@@ -34,7 +34,7 @@ final class OrderFromCartFactoryTest extends TestCase
         $order = $factory->fromCart('cart-1');
 
         $this->assertSame($customerId->value, $order->customerId()->value);
-        $this->assertSame(100_000, $order->total()->amount); // 2 × 500 CZK, no discount
+        $this->assertSame(100_000, $order->totalAmount()->amountInCents); // 2 × 500 CZK, no discount
         $this->assertCount(1, $order->items());
     }
 
@@ -57,7 +57,7 @@ final class OrderFromCartFactoryTest extends TestCase
         $order = $factory->fromCart('cart-2');
 
         // 10 % sleva v PricingService
-        $this->assertSame(90_000, $order->total()->amount);
+        $this->assertSame(90_000, $order->totalAmount()->amountInCents);
     }
 
     public function test_empty_cart_throws_domain_exception(): void

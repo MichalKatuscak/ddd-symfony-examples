@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 namespace App\Chapter05_CQRS\Domain\Order;
-use App\Shared\Domain\AggregateRoot;
+
+use App\Shared\Domain\Currency;use App\Shared\Domain\AggregateRoot;
 
 class Order extends AggregateRoot
 {
-    private string $id;
+    // Identita zůstává hodnotovým objektem i ve write modelu; převod
+    // na sloupec obstará custom typ, ne getter.
+    public readonly OrderId $id;
 
     private string $customerId;
 
@@ -16,7 +19,7 @@ class Order extends AggregateRoot
 
     private function __construct(OrderId $id, string $customerId)
     {
-        $this->id = $id->value;
+        $this->id = $id;
         $this->customerId = $customerId;
     }
 
@@ -32,8 +35,7 @@ class Order extends AggregateRoot
         return $order;
     }
 
-    public function id(): OrderId { return new OrderId($this->id); }
     public function customerId(): string { return $this->customerId; }
-    public function total(): Money { return new Money($this->totalAmount, 'CZK'); }
+    public function totalAmount(): Money { return new Money($this->totalAmount, Currency::CZK); }
     public function items(): array { return $this->items; }
 }

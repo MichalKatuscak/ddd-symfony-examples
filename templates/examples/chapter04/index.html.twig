@@ -34,7 +34,7 @@
                         <tr>
                             <td><code>{{ order.id().value|slice(0,8) }}…</code></td>
                             <td>{{ order.customerId() }}</td>
-                            <td>{{ order.total().formatted() }}</td>
+                            <td>{{ order.totalAmount().formatted() }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>
@@ -51,7 +51,7 @@
             <pre class="bg-light p-3 rounded small">// V Order agregátu:
 private int $totalAmount; // haléře v DB
 
-public function total(): Money {
+public function totalAmount(): Money {
     return new Money($this->totalAmount, 'CZK');
 }
 
@@ -124,7 +124,7 @@ class OrderPlacedListener {
 
     public function isSatisfiedBy(Order $order): bool
     {
-        return $order->total()->amount >= $this->minimumAmountCents;
+        return $order->totalAmount()->amountInCents >= $this->minimumAmountCents;
     }
 }
 

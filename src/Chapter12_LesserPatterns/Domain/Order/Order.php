@@ -21,7 +21,7 @@ final class Order extends AggregateRoot
 
     /** @param list<OrderItem> $items */
     private function __construct(
-        private readonly OrderId $id,
+        public readonly OrderId $id,
         private readonly CustomerId $customerId,
         array $items,
         private readonly string $shippingCountry,
@@ -56,15 +56,10 @@ final class Order extends AggregateRoot
         $order->record(new OrderPlaced(
             orderId: $order->id,
             customerId: $customerId,
-            total: $order->total(),
+            total: $order->totalAmount(),
         ));
 
         return $order;
-    }
-
-    public function id(): OrderId
-    {
-        return $this->id;
     }
 
     public function customerId(): CustomerId
@@ -88,7 +83,7 @@ final class Order extends AggregateRoot
         return $this->placedAt;
     }
 
-    public function total(): Money
+    public function totalAmount(): Money
     {
         $total = new Money(0);
         foreach ($this->items as $item) {

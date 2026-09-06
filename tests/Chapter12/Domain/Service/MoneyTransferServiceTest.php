@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Chapter12\Domain\Service;
 
+use App\Shared\Domain\Currency;
 use App\Chapter12_LesserPatterns\Domain\Order\Money;
 use App\Chapter12_LesserPatterns\Domain\Service\Account;
 use App\Chapter12_LesserPatterns\Domain\Service\InsufficientFundsException;
@@ -19,8 +20,8 @@ final class MoneyTransferServiceTest extends TestCase
 
         (new MoneyTransferService())->transfer($from, $to, new Money(20_000));
 
-        $this->assertSame(30_000, $from->balance()->amount);
-        $this->assertSame(30_000, $to->balance()->amount);
+        $this->assertSame(30_000, $from->balance()->amountInCents);
+        $this->assertSame(30_000, $to->balance()->amountInCents);
     }
 
     public function test_transfer_throws_when_source_account_lacks_funds(): void
@@ -44,11 +45,11 @@ final class MoneyTransferServiceTest extends TestCase
 
     public function test_currency_mismatch_is_rejected(): void
     {
-        $from = new Account('acc-from', new Money(10_000, 'CZK'));
-        $to = new Account('acc-to', new Money(0, 'EUR'));
+        $from = new Account('acc-from', new Money(10_000, Currency::CZK));
+        $to = new Account('acc-to', new Money(0, Currency::EUR));
 
         $this->expectException(\DomainException::class);
 
-        (new MoneyTransferService())->transfer($from, $to, new Money(1_000, 'CZK'));
+        (new MoneyTransferService())->transfer($from, $to, new Money(1_000, Currency::CZK));
     }
 }

@@ -24,7 +24,7 @@ final class PlaceOrderHandler
         $order = Order::place($id, $command->customerId, $command->lines);
         $this->orders->save($order);
 
-        foreach ($order->pullEvents() as $event) {
+        foreach ($order->releaseEvents() as $event) {
             $this->eventDispatcher->dispatch($event);
         }
 

@@ -6,15 +6,16 @@ namespace App\Shared\Domain;
 
 abstract class AggregateRoot
 {
+    /** @var list<object> */
     private array $domainEvents = [];
 
-    protected function record(DomainEvent $event): void
+    protected function record(object $event): void
     {
         $this->domainEvents[] = $event;
     }
 
-    /** @return DomainEvent[] */
-    public function pullEvents(): array
+    /** @return list<object> */
+    public function releaseEvents(): array
     {
         $events = $this->domainEvents;
         $this->domainEvents = [];

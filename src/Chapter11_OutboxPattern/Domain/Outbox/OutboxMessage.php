@@ -18,11 +18,17 @@ use App\Shared\Domain\DomainEvent;
  */
 final class OutboxMessage
 {
+    private const MAX_ATTEMPTS = 5;
+
     private OutboxStatus $status = OutboxStatus::Pending;
 
     private int $attempts = 0;
 
     private ?\DateTimeImmutable $sentAt = null;
+
+    private \DateTimeImmutable $availableAt;
+
+    private ?string $lastError = null;
 
     /**
      * @param array<string, mixed> $payload
@@ -33,6 +39,7 @@ final class OutboxMessage
         public readonly array $payload,
         public readonly \DateTimeImmutable $occurredAt,
     ) {
+        $this->availableAt = $occurredAt;
     }
 
     public static function fromEvent(DomainEvent $event): self
@@ -57,16 +64,40 @@ final class OutboxMessage
         );
     }
 
-    public function markSent(): void
+    public function markSent(\DateTimeImmutable $now): void
     {
         $this->status = OutboxStatus::Sent;
-        $this->sentAt = new \DateTimeImmutable();
+        $this->sentAt = $now;
+        $this->lastError = null;
     }
 
-    public function markFailed(): void
+    public function markFailed(string $error): void
     {
-        $this->status = OutboxStatus::Failed;
         ++$this->attempts;
+
+        // Jeden neúspěch ještě není konec. Do failed řádek propadne až
+        // po vyčerpání pokusů; do té doby čeká, aby relay nepálil
+        // všech pět pokusů během jediné vteřiny.
+        $this->status = $this->attempts >= self::MAX_ATTEMPTS
+            ? OutboxStatus::Failed
+            : OutboxStatus::Pending;
+
+        $this->availableAt = new \DateTimeImmutable(
+            sprintf('+%d seconds', 2 ** $this->attempts),
+        );
+        $this->lastError = $error;
+    }
+
+    /** Relay bere jen řádky, kterým už uplynul odklad. */
+    public function isAvailableAt(\DateTimeImmutable $now): bool
+    {
+        return $this->status === OutboxStatus::Pending
+            && $this->availableAt <= $now;
+    }
+
+    public function lastError(): ?string
+    {
+        return $this->lastError;
     }
 
     public function status(): OutboxStatus

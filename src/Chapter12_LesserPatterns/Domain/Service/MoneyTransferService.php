@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Chapter12_LesserPatterns\Domain\Service;
 
+use App\Chapter12_LesserPatterns\Domain\Exception\TransferNotAllowedException;
+use App\Chapter12_LesserPatterns\Domain\Exception\CurrencyMismatchException;
 use App\Chapter12_LesserPatterns\Domain\Order\Money;
 
 /**
@@ -22,13 +24,11 @@ final class MoneyTransferService
     public function transfer(Account $from, Account $to, Money $amount): void
     {
         if ($from->id() === $to->id()) {
-            throw new \DomainException('Cannot transfer to the same account.');
+            throw TransferNotAllowedException::sameAccount();
         }
 
         if ($from->balance()->currency !== $to->balance()->currency) {
-            throw new \DomainException(
-                'Currency mismatch — cross-currency transfers need FxTransferService.',
-            );
+            throw CurrencyMismatchException::betweenAccounts();
         }
 
         // Domain Service koordinuje: oba agregáty mutuje, ale ani jeden nemá přímou vazbu na druhý.

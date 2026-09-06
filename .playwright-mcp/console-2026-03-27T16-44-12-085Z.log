@@ -1,0 +1,1 @@
+[     561ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://raspberrypi.local:8001/examples/event-sourcing:0

@@ -25,10 +25,10 @@ final class AggregateRootTest extends TestCase
         };
 
         $aggregate->doSomething();
-        $events = $aggregate->pullEvents();
+        $events = $aggregate->releaseEvents();
 
         $this->assertCount(1, $events);
-        $this->assertEmpty($aggregate->pullEvents());
+        $this->assertEmpty($aggregate->releaseEvents());
     }
 
     public function test_pull_events_returns_empty_array_on_second_call(): void
@@ -46,9 +46,9 @@ final class AggregateRootTest extends TestCase
         };
 
         $aggregate->doSomething();
-        $aggregate->pullEvents(); // first call — consumes events
+        $aggregate->releaseEvents(); // first call — consumes events
 
-        $second = $aggregate->pullEvents();
+        $second = $aggregate->releaseEvents();
 
         $this->assertSame([], $second);
     }
@@ -74,7 +74,7 @@ final class AggregateRootTest extends TestCase
         $aggregate->recordEvent('second');
         $aggregate->recordEvent('third');
 
-        $events = $aggregate->pullEvents();
+        $events = $aggregate->releaseEvents();
 
         $this->assertCount(3, $events);
         $this->assertSame('first', $events[0]->name);

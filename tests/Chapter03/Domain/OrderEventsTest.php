@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Chapter03\Domain;
 
+use App\Chapter03_BasicConcepts\Domain\Order\ProductId;
+use App\Shared\Domain\Currency;
 use App\Chapter03_BasicConcepts\Domain\Order\Events\OrderConfirmed;
 use App\Chapter03_BasicConcepts\Domain\Order\Events\OrderItemAdded;
 use App\Chapter03_BasicConcepts\Domain\Order\Money;
@@ -15,25 +17,25 @@ class OrderEventsTest extends TestCase
 {
     public function testAddItemRecordsEvent(): void
     {
-        $order = Order::create(OrderId::generate(), 'student-1');
-        $order->addItem('Kniha', 2, new Money(59900, 'CZK'));
+        $order = Order::place(OrderId::generate(), 'student-1');
+        $order->addItem(ProductId::generate(), 2, new Money(59900, Currency::CZK));
 
-        $events = $order->pullEvents();
+        $events = $order->releaseEvents();
 
         $this->assertCount(1, $events);
         $this->assertInstanceOf(OrderItemAdded::class, $events[0]);
-        $this->assertSame('Kniha', $events[0]->productName);
-        $this->assertSame(2, $events[0]->qty);
+        $this->assertNotSame('', $events[0]->productId);
+        $this->assertSame(2, $events[0]->quantity);
     }
 
     public function testConfirmRecordsEvent(): void
     {
-        $order = Order::create(OrderId::generate(), 'student-1');
-        $order->addItem('Kniha', 1, new Money(59900, 'CZK'));
-        $order->pullEvents(); // clear addItem event
+        $order = Order::place(OrderId::generate(), 'student-1');
+        $order->addItem(ProductId::generate(), 1, new Money(59900, Currency::CZK));
+        $order->releaseEvents(); // clear addItem event
 
         $order->confirm();
-        $events = $order->pullEvents();
+        $events = $order->releaseEvents();
 
         $this->assertCount(1, $events);
         $this->assertInstanceOf(OrderConfirmed::class, $events[0]);

@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace App\Chapter11_OutboxPattern\Domain\Order;
 
+use App\Chapter11_OutboxPattern\Domain\Order\Exception\OrderAlreadyCancelledException;
 use App\Shared\Domain\AggregateRoot;
 use Symfony\Component\Uid\Uuid;
 
 final class Order extends AggregateRoot
 {
-    private OrderStatus $status;
+    // Asymetrická viditelnost: přečte kdokoli, zapíše jen kód uvnitř třídy.
+    public private(set) OrderStatus $status;
 
     private function __construct(
-        private readonly OrderId $id,
-        private readonly string $customerId,
-        private readonly int $amount,
+        public readonly OrderId $id,
+        public readonly string $customerId,
+        public readonly int $amount,
     ) {
         if ($amount <= 0) {
             throw new \InvalidArgumentException('Order amount must be positive');
@@ -42,7 +44,7 @@ final class Order extends AggregateRoot
     public function cancel(string $reason): void
     {
         if ($this->status === OrderStatus::Cancelled) {
-            throw new \DomainException('Order is already cancelled');
+            throw OrderAlreadyCancelledException::withId($this->id->value);
         }
 
         $this->status = OrderStatus::Cancelled;
@@ -54,23 +56,4 @@ final class Order extends AggregateRoot
         ));
     }
 
-    public function id(): OrderId
-    {
-        return $this->id;
-    }
-
-    public function customerId(): string
-    {
-        return $this->customerId;
-    }
-
-    public function amount(): int
-    {
-        return $this->amount;
-    }
-
-    public function status(): OrderStatus
-    {
-        return $this->status;
-    }
 }

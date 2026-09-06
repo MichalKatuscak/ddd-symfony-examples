@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Chapter12_LesserPatterns\Application\Factory;
 
+use App\Chapter12_LesserPatterns\Domain\Exception\EmptyCartException;
+use App\Chapter12_LesserPatterns\Domain\Exception\CustomerNotFoundException;
 use App\Chapter12_LesserPatterns\Domain\Customer\CustomerRepositoryInterface;
 use App\Chapter12_LesserPatterns\Domain\Order\CartRepositoryInterface;
 use App\Chapter12_LesserPatterns\Domain\Order\Order;
@@ -32,13 +34,11 @@ final class OrderFromCartFactory
         $cart = $this->carts->findById($cartId);
 
         if ($cart->isEmpty()) {
-            throw new \DomainException('Cannot place order from empty cart.');
+            throw EmptyCartException::cannotPlaceOrder();
         }
 
         $customer = $this->customers->findById($cart->customerId())
-            ?? throw new \DomainException(
-                sprintf('Customer %s not found', $cart->customerId()->value),
-            );
+            ?? throw CustomerNotFoundException::withId($cart->customerId()->value);
 
         $pricedItems = $this->pricing->priceItems($cart->rawItems(), $customer);
 

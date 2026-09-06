@@ -24,7 +24,7 @@ final class Cart
         if ($qty <= 0) {
             throw new \InvalidArgumentException('Quantity must be greater than 0');
         }
-        $id = $product->id()->value;
+        $id = $product->id->value;
         if (isset($this->items[$id])) {
             $this->items[$id]['qty'] += $qty;
         } else {
@@ -37,7 +37,7 @@ final class Cart
         return array_sum(array_column($this->items, 'qty'));
     }
 
-    public function total(): Price
+    public function totalAmount(): Price
     {
         $total = null;
         foreach ($this->items as ['product' => $product, 'qty' => $qty]) {

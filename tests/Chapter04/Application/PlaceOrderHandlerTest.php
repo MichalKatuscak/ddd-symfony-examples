@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Chapter04\Application;
 
+use App\Shared\Domain\Currency;
 use App\Chapter04_Implementation\Application\PlaceOrder\PlaceOrderCommand;
 use App\Chapter04_Implementation\Application\PlaceOrder\PlaceOrderHandler;
 use App\Chapter04_Implementation\Domain\Order\Money;
@@ -61,7 +62,7 @@ final class PlaceOrderHandlerTest extends TestCase
 
         $orderId = ($handler)(new PlaceOrderCommand(
             customerId: 'zákazník-1',
-            lines: [new OrderLine('Symfony kniha', 1, new Money(59900, 'CZK'))],
+            lines: [new OrderLine('Symfony kniha', 1, new Money(59900, Currency::CZK))],
         ));
 
         $this->assertNotEmpty($orderId);
@@ -75,11 +76,11 @@ final class PlaceOrderHandlerTest extends TestCase
 
         $orderId = ($handler)(new PlaceOrderCommand(
             customerId: 'zákazník-1',
-            lines: [new OrderLine('Produkt', 2, new Money(10000, 'CZK'))],
+            lines: [new OrderLine('Produkt', 2, new Money(10000, Currency::CZK))],
         ));
 
         $this->assertNotNull($repo->saved);
-        $this->assertSame($orderId, $repo->saved->id()->value);
+        $this->assertSame($orderId, $repo->saved->id->value);
     }
 
     public function test_domain_events_are_dispatched(): void
@@ -90,7 +91,7 @@ final class PlaceOrderHandlerTest extends TestCase
 
         ($handler)(new PlaceOrderCommand(
             customerId: 'zákazník-1',
-            lines: [new OrderLine('DDD kniha', 1, new Money(79900, 'CZK'))],
+            lines: [new OrderLine('DDD kniha', 1, new Money(79900, Currency::CZK))],
         ));
 
         $this->assertNotEmpty($dispatcher->dispatched);
@@ -105,7 +106,7 @@ final class PlaceOrderHandlerTest extends TestCase
 
         ($handler)(new PlaceOrderCommand(
             customerId: 'zákazník-42',
-            lines: [new OrderLine('Produkt', 1, new Money(5000, 'CZK'))],
+            lines: [new OrderLine('Produkt', 1, new Money(5000, Currency::CZK))],
         ));
 
         /** @var OrderPlaced $event */

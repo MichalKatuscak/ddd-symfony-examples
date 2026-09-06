@@ -10,8 +10,8 @@ final readonly class OrderItemAdded implements DomainEvent
 {
     public function __construct(
         public string $orderId,
-        public string $productName,
-        public int $qty,
+        public string $productId,
+        public int $quantity,
         public int $lineTotalCents,
         private \DateTimeImmutable $occurredAt = new \DateTimeImmutable(),
     ) {}
