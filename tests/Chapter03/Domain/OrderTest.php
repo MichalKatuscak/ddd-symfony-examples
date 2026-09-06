@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Chapter03\Domain;
 
+use App\Chapter03_BasicConcepts\Domain\Order\Exception\EmptyOrderException;
+use App\Chapter03_BasicConcepts\Domain\Order\Exception\InvalidOrderStateTransitionException;
 use App\Shared\Domain\Currency;
 use App\Chapter03_BasicConcepts\Domain\Order\Money;
 use App\Chapter03_BasicConcepts\Domain\Order\Order;
@@ -28,7 +30,9 @@ final class OrderTest extends TestCase
 
     public function test_cannot_add_item_to_confirmed_order(): void
     {
-        $this->expectException(\DomainException::class);
+        // Typ výjimky je součást kontraktu – proto se testuje ten,
+        // ne obecný předek.
+        $this->expectException(InvalidOrderStateTransitionException::class);
         $order = Order::place(OrderId::generate(), 'zákazník-1');
         $order->addItem('Produkt', 1, new Money(10000, Currency::CZK));
         $order->confirm();
@@ -37,7 +41,7 @@ final class OrderTest extends TestCase
 
     public function test_cannot_confirm_empty_order(): void
     {
-        $this->expectException(\DomainException::class);
+        $this->expectException(EmptyOrderException::class);
         $order = Order::place(OrderId::generate(), 'zákazník-1');
         $order->confirm();
     }
