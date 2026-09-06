@@ -32,7 +32,7 @@ final class Order extends AggregateRoot
         $order->status = OrderStatus::Placed;
 
         $order->record(new OrderPlaced(
-            eventId: Uuid::v4()->toRfc4122(),
+            eventId: Uuid::v7()->toRfc4122(),
             orderId: $id->value,
             customerId: $customerId,
             amount: $amount,
@@ -50,7 +50,7 @@ final class Order extends AggregateRoot
         $this->status = OrderStatus::Cancelled;
 
         $this->record(new OrderCancelled(
-            eventId: Uuid::v4()->toRfc4122(),
+            eventId: Uuid::v7()->toRfc4122(),
             orderId: $this->id->value,
             reason: $reason,
         ));

@@ -11,7 +11,7 @@ Otevři [http://localhost:8000/examples/zakladni-koncepty](http://localhost:8000
 - Entity s identitou (`Order`, `OrderId`) a jejich doménová pravidla
 - Value Objects (`Money`, `Email`) — immutabilní, validované v konstruktoru
 - Agregát jako ochránce invariantů — `Order.confirm()` zamítne prázdnou objednávku
-- Domain Events — agregát zaznamenává co se stalo, volající si eventy vyzvedne přes `pullEvents()`
+- Domain Events — agregát zaznamenává co se stalo, volající si eventy vyzvedne přes `releaseEvents()`
 - Domain Service — `OrderConfirmationService` koordinuje agregát a repozitář
 
 ## Odkaz na příručku

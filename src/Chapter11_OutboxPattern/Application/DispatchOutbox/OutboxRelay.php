@@ -78,7 +78,7 @@ final readonly class OutboxRelay
         $payload = $message->payload;
 
         return new OrderPlaced(
-            eventId: (string) ($payload['eventId'] ?? Uuid::v4()->toRfc4122()),
+            eventId: (string) ($payload['eventId'] ?? Uuid::v7()->toRfc4122()),
             orderId: (string) ($payload['orderId'] ?? ''),
             customerId: (string) ($payload['customerId'] ?? ''),
             amount: (int) ($payload['amount'] ?? 0),

@@ -26,7 +26,7 @@ final readonly class SagaOrchestrator
 
     public function start(StartSagaCommand $command): OrderFulfillmentSaga
     {
-        $sagaId = Uuid::v4()->toRfc4122();
+        $sagaId = Uuid::v7()->toRfc4122();
 
         $saga = OrderFulfillmentSaga::start($sagaId, $command->orderId, $command->amount);
         $this->repository->save($saga);
