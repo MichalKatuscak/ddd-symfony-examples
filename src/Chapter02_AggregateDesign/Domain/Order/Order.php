@@ -168,6 +168,29 @@ final class Order extends AggregateRoot
         return $this->sagaInProgress;
     }
 
+    // Vztahový invariant: vlastnictví zná agregát, ne Voter.
+    public function isOwnedBy(CustomerId $customerId): bool
+    {
+        return $this->customerId->equals($customerId);
+    }
+
+    /**
+     * Odpověď pro UI. Musí znát i zámek – jinak šablona nabídne tlačítko,
+     * jehož příkaz vždycky skončí v dead-letter frontě.
+     */
+    public function isCancellable(): bool
+    {
+        if ($this->sagaInProgress) {
+            return false;
+        }
+
+        return !in_array($this->status, [
+            OrderStatus::Shipped,
+            OrderStatus::Delivered,
+            OrderStatus::Cancelled,
+        ], true);
+    }
+
     public function totalAmount(): Money
     {
         // Guard je nutný: place() prázdnou objednávku pustí, takže bez něj
