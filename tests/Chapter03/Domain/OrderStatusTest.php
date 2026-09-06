@@ -9,9 +9,9 @@ use PHPUnit\Framework\TestCase;
 
 final class OrderStatusTest extends TestCase
 {
-    public function test_has_pending_case(): void
+    public function test_has_draft_case(): void
     {
-        $this->assertSame('pending', OrderStatus::Pending->value);
+        $this->assertSame('draft', OrderStatus::Draft->value);
     }
 
     public function test_has_confirmed_case(): void
@@ -24,10 +24,10 @@ final class OrderStatusTest extends TestCase
         $this->assertSame('cancelled', OrderStatus::Cancelled->value);
     }
 
-    public function test_from_pending_string_works(): void
+    public function test_from_draft_string_works(): void
     {
-        $status = OrderStatus::from('pending');
-        $this->assertSame(OrderStatus::Pending, $status);
+        $status = OrderStatus::from('draft');
+        $this->assertSame(OrderStatus::Draft, $status);
     }
 
     public function test_from_confirmed_string_works(): void

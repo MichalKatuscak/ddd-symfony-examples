@@ -13,13 +13,13 @@ use PHPUnit\Framework\TestCase;
 
 final class OrderTest extends TestCase
 {
-    public function test_new_order_is_pending(): void
+    public function test_new_order_is_draft(): void
     {
         $order = Order::place(OrderId::generate(), 'zákazník-1');
-        $this->assertSame(OrderStatus::Pending, $order->status());
+        $this->assertSame(OrderStatus::Draft, $order->status());
     }
 
-    public function test_can_add_item_to_pending_order(): void
+    public function test_can_add_item_to_draft_order(): void
     {
         $order = Order::place(OrderId::generate(), 'zákazník-1');
         $order->addItem('Symfony kniha', 2, new Money(59900, Currency::CZK));

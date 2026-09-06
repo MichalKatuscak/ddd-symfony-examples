@@ -39,7 +39,7 @@ final readonly class SagaOrchestrator
         ));
 
         $saga = $this->repository->findById($sagaId);
-        if ($saga->state() === SagaState::Failed) {
+        if ($saga->state()->isTerminal()) {
             return $saga;
         }
 

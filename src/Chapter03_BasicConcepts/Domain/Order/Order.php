@@ -7,6 +7,8 @@ namespace App\Chapter03_BasicConcepts\Domain\Order;
 use App\Shared\Domain\Currency;
 use App\Chapter03_BasicConcepts\Domain\Order\Events\OrderConfirmed;
 use App\Chapter03_BasicConcepts\Domain\Order\Events\OrderItemAdded;
+use App\Chapter03_BasicConcepts\Domain\Order\Exception\EmptyOrderException;
+use App\Chapter03_BasicConcepts\Domain\Order\Exception\InvalidOrderStateTransitionException;
 use App\Shared\Domain\AggregateRoot;
 
 final class Order extends AggregateRoot
@@ -19,7 +21,7 @@ final class Order extends AggregateRoot
         private readonly OrderId $id,
         private readonly string $customerId,
     ) {
-        $this->status = OrderStatus::Pending;
+        $this->status = OrderStatus::Draft;
     }
 
     public static function place(OrderId $id, string $customerId): self
@@ -29,8 +31,8 @@ final class Order extends AggregateRoot
 
     public function addItem(string $name, int $qty, Money $unitPrice): void
     {
-        if ($this->status !== OrderStatus::Pending) {
-            throw new \DomainException('Cannot add items to a non-pending order');
+        if ($this->status !== OrderStatus::Draft) {
+            throw InvalidOrderStateTransitionException::notAllowedInState('přidání položky', $this->status->value);
         }
         $item = new OrderItem($name, $qty, $unitPrice);
         $this->items[] = $item;
@@ -45,7 +47,7 @@ final class Order extends AggregateRoot
     public function confirm(): void
     {
         if (empty($this->items)) {
-            throw new \DomainException('Cannot confirm an empty order');
+            throw EmptyOrderException::cannotConfirm();
         }
         $this->status = OrderStatus::Confirmed;
         $this->record(new OrderConfirmed(
