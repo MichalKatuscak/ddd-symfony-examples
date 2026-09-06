@@ -24,7 +24,7 @@ final class Cart
         if ($qty <= 0) {
             throw new \InvalidArgumentException('Quantity must be greater than 0');
         }
-        $id = $product->id()->value;
+        $id = $product->id->value;
         if (isset($this->items[$id])) {
             $this->items[$id]['qty'] += $qty;
         } else {

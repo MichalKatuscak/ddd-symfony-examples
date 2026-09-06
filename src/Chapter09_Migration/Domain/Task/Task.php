@@ -10,7 +10,7 @@ final class Task
     private ?string $assignedTo = null;
 
     private function __construct(
-        private readonly TaskId $id,
+        public readonly TaskId $id,
         private readonly string $title,
         private readonly string $projectId,
     ) {
@@ -42,7 +42,6 @@ final class Task
         $this->status = TaskStatus::Done;
     }
 
-    public function id(): TaskId { return $this->id; }
     public function title(): string { return $this->title; }
     public function status(): TaskStatus { return $this->status; }
     public function assignedTo(): ?string { return $this->assignedTo; }

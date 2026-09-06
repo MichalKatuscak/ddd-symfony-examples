@@ -17,7 +17,7 @@ final class Order
     /** @var DomainEvent[] */
     private array $uncommittedEvents = [];
 
-    private function __construct(private readonly OrderId $id) {}
+    private function __construct(public readonly OrderId $id) {}
 
     public static function place(OrderId $id, string $customerId, int $totalAmount): self
     {
@@ -72,7 +72,6 @@ final class Order
         };
     }
 
-    public function id(): OrderId { return $this->id; }
     public function status(): string { return $this->status; }
     public function totalAmount(): int { return $this->totalAmount; }
     public function customerId(): string { return $this->customerId; }
