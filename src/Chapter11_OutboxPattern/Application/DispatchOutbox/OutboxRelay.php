@@ -38,13 +38,22 @@ final readonly class OutboxRelay
         $processed = 0;
         $failed = 0;
 
+        $now = new \DateTimeImmutable();
+
         foreach ($pending as $message) {
+            // Řádek, kterému ještě neuplynul odklad po předchozím selhání,
+            // se přeskočí – jinak by se všech pět pokusů vyčerpalo během
+            // jediné vteřiny.
+            if (!$message->isAvailableAt($now)) {
+                continue;
+            }
+
             try {
                 $this->dispatchOne($message);
-                $message->markSent();
+                $message->markSent($now);
                 ++$processed;
-            } catch (\Throwable) {
-                $message->markFailed();
+            } catch (\Throwable $e) {
+                $message->markFailed($e->getMessage());
                 ++$failed;
             }
 
