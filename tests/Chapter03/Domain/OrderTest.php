@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Chapter03\Domain;
 
+use App\Chapter03_BasicConcepts\Domain\Order\ProductId;
 use App\Chapter03_BasicConcepts\Domain\Order\Exception\EmptyOrderException;
 use App\Chapter03_BasicConcepts\Domain\Order\Exception\InvalidOrderStateTransitionException;
 use App\Shared\Domain\Currency;
@@ -18,13 +19,13 @@ final class OrderTest extends TestCase
     public function test_new_order_is_draft(): void
     {
         $order = Order::place(OrderId::generate(), 'zákazník-1');
-        $this->assertSame(OrderStatus::Draft, $order->status());
+        $this->assertSame(OrderStatus::Draft, $order->status);
     }
 
     public function test_can_add_item_to_draft_order(): void
     {
         $order = Order::place(OrderId::generate(), 'zákazník-1');
-        $order->addItem('Symfony kniha', 2, new Money(59900, Currency::CZK));
+        $order->addItem(ProductId::generate(), 2, new Money(59900, Currency::CZK));
         $this->assertEquals(new Money(119800, Currency::CZK), $order->totalAmount());
     }
 
@@ -34,9 +35,9 @@ final class OrderTest extends TestCase
         // ne obecný předek.
         $this->expectException(InvalidOrderStateTransitionException::class);
         $order = Order::place(OrderId::generate(), 'zákazník-1');
-        $order->addItem('Produkt', 1, new Money(10000, Currency::CZK));
+        $order->addItem(ProductId::generate(), 1, new Money(10000, Currency::CZK));
         $order->confirm();
-        $order->addItem('Další', 1, new Money(5000, Currency::CZK));
+        $order->addItem(ProductId::generate(), 1, new Money(5000, Currency::CZK));
     }
 
     public function test_cannot_confirm_empty_order(): void

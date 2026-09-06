@@ -15,7 +15,7 @@ final class InMemoryOrderRepository implements OrderRepositoryInterface
 
     public function save(Order $order): void
     {
-        $this->orders[$order->id()->value] = $order;
+        $this->orders[$order->id->value] = $order;
     }
 
     public function findById(OrderId $id): ?Order

@@ -36,7 +36,7 @@ final class PlaceOrderHandlerTest extends TestCase
         // Order saved
         $order = $this->orders->findById(new OrderId($orderId));
         $this->assertNotNull($order);
-        $this->assertSame('customer-1', $order->customerId());
+        $this->assertSame('customer-1', $order->customerId);
 
         // Outbox row written in the same conceptual transaction
         $messages = $this->outbox->findAll();

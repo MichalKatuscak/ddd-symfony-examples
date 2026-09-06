@@ -10,12 +10,13 @@ use Symfony\Component\Uid\Uuid;
 
 final class Order extends AggregateRoot
 {
-    private OrderStatus $status;
+    // Asymetrická viditelnost: přečte kdokoli, zapíše jen kód uvnitř třídy.
+    public private(set) OrderStatus $status;
 
     private function __construct(
-        private readonly OrderId $id,
-        private readonly string $customerId,
-        private readonly int $amount,
+        public readonly OrderId $id,
+        public readonly string $customerId,
+        public readonly int $amount,
     ) {
         if ($amount <= 0) {
             throw new \InvalidArgumentException('Order amount must be positive');
@@ -55,23 +56,4 @@ final class Order extends AggregateRoot
         ));
     }
 
-    public function id(): OrderId
-    {
-        return $this->id;
-    }
-
-    public function customerId(): string
-    {
-        return $this->customerId;
-    }
-
-    public function amount(): int
-    {
-        return $this->amount;
-    }
-
-    public function status(): OrderStatus
-    {
-        return $this->status;
-    }
 }

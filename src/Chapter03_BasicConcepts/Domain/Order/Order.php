@@ -15,11 +15,14 @@ final class Order extends AggregateRoot
 {
     /** @var OrderItem[] */
     private array $items = [];
-    private OrderStatus $status;
+
+    // Asymetrická viditelnost: přečte kdokoli, zapíše jen kód uvnitř třídy.
+    // Getter tím odpadá a stavové přechody zůstávají jediným místem zápisu.
+    public private(set) OrderStatus $status;
 
     private function __construct(
-        private readonly OrderId $id,
-        private readonly string $customerId,
+        public readonly OrderId $id,
+        public readonly string $customerId,
     ) {
         $this->status = OrderStatus::Draft;
     }
@@ -29,17 +32,17 @@ final class Order extends AggregateRoot
         return new self($id, $customerId);
     }
 
-    public function addItem(string $name, int $qty, Money $unitPrice): void
+    public function addItem(ProductId $productId, int $quantity, Money $unitPrice): void
     {
         if ($this->status !== OrderStatus::Draft) {
             throw InvalidOrderStateTransitionException::notAllowedInState('přidání položky', $this->status->value);
         }
-        $item = new OrderItem($name, $qty, $unitPrice);
+        $item = new OrderItem($productId, $quantity, $unitPrice);
         $this->items[] = $item;
         $this->record(new OrderItemAdded(
             orderId: $this->id->value,
-            productName: $name,
-            qty: $qty,
+            productId: $productId->value,
+            quantity: $quantity,
             lineTotalCents: $item->lineTotal()->amountInCents,
         ));
     }
@@ -56,9 +59,6 @@ final class Order extends AggregateRoot
         ));
     }
 
-    public function id(): OrderId { return $this->id; }
-    public function customerId(): string { return $this->customerId; }
-    public function status(): OrderStatus { return $this->status; }
 
     public function totalAmount(): Money
     {

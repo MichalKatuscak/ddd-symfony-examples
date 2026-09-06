@@ -18,9 +18,9 @@ final class OrderTest extends TestCase
         $id = OrderId::generate();
         $order = Order::place($id, 'customer-1', 1500);
 
-        $this->assertSame(OrderStatus::Placed, $order->status());
-        $this->assertSame(1500, $order->amount());
-        $this->assertSame('customer-1', $order->customerId());
+        $this->assertSame(OrderStatus::Placed, $order->status);
+        $this->assertSame(1500, $order->amount);
+        $this->assertSame('customer-1', $order->customerId);
 
         $events = $order->releaseEvents();
         $this->assertCount(1, $events);
@@ -48,7 +48,7 @@ final class OrderTest extends TestCase
         $this->assertCount(1, $events);
         $this->assertInstanceOf(OrderCancelled::class, $events[0]);
         $this->assertSame('customer changed mind', $events[0]->reason);
-        $this->assertSame(OrderStatus::Cancelled, $order->status());
+        $this->assertSame(OrderStatus::Cancelled, $order->status);
     }
 
     public function test_cannot_cancel_twice(): void
