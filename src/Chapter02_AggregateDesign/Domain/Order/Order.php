@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Chapter02_AggregateDesign\Domain\Order;
 
 use App\Chapter02_AggregateDesign\Domain\Order\Event\OrderCancelled;
+use App\Chapter02_AggregateDesign\Domain\Order\Event\OrderConfirmed;
+use App\Chapter02_AggregateDesign\Domain\Order\Event\OrderItemAdded;
 use App\Chapter02_AggregateDesign\Domain\Order\Event\OrderPlaced;
 use App\Chapter02_AggregateDesign\Domain\Order\Event\OrderShipped;
 use App\Chapter02_AggregateDesign\Domain\Order\Exception\EmptyOrderException;
@@ -43,7 +45,10 @@ final class Order extends AggregateRoot
 
     public static function place(OrderId $id, CustomerId $customerId): self
     {
-        return new self($id, $customerId);
+        $order = new self($id, $customerId);
+        $order->record(new OrderPlaced($id, $customerId));
+
+        return $order;
     }
 
     /**
@@ -57,10 +62,9 @@ final class Order extends AggregateRoot
         Money $unitPrice,
         ?\DateTimeImmutable $at = null,
     ): self {
-        $order = new self(OrderId::generate(), $customerId);
+        $order = self::place(OrderId::generate(), $customerId);
         $order->addItem($productId, $quantity, $unitPrice);
         $order->confirm($at);
-        $order->record(new OrderPlaced($order->id, $customerId));
 
         return $order;
     }
@@ -78,12 +82,14 @@ final class Order extends AggregateRoot
         foreach ($this->items as $existing) {
             if ($existing->productId->equals($productId)) {
                 $existing->increaseQuantity($quantity);
+                $this->record(new OrderItemAdded($this->id, $productId, $quantity));
 
                 return;
             }
         }
 
         $this->items[] = new OrderItem($productId, $quantity, $unitPrice);
+        $this->record(new OrderItemAdded($this->id, $productId, $quantity));
     }
 
     public function confirm(?\DateTimeImmutable $at = null): void
@@ -101,6 +107,7 @@ final class Order extends AggregateRoot
 
         $this->status = OrderStatus::Confirmed;
         $this->placedAt = $at ?? new \DateTimeImmutable();
+        $this->record(new OrderConfirmed($this->id, $this->customerId, $this->placedAt));
     }
 
     // Bez tohohle přechodu je ship() nedosažitelná: do Paid se objednávka jinak nedostane.

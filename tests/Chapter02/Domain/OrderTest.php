@@ -67,7 +67,11 @@ final class OrderTest extends TestCase
         $order->ship(ShipmentId::generate());
 
         self::assertSame(OrderStatus::Shipped, $order->status);
-        self::assertInstanceOf(OrderShipped::class, $order->releaseEvents()[1]);
+
+        // Hledáme typ, ne pozici: pořadí událostí se změní pokaždé,
+        // když agregát začne vydávat další.
+        $types = array_map(static fn (object $e): string => $e::class, $order->releaseEvents());
+        self::assertContains(OrderShipped::class, $types);
     }
 
     public function test_shipping_unpaid_order_is_refused(): void
