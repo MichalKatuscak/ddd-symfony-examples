@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Chapter04_Implementation\UI;
 
+use App\Shared\Domain\Currency;
 use App\Chapter04_Implementation\Application\GetOrders\GetOrdersQuery;
 use App\Chapter04_Implementation\Application\PlaceOrder\PlaceOrderCommand;
 use App\Chapter04_Implementation\Domain\Order\Money;
@@ -34,7 +35,7 @@ final class Chapter04Controller extends AbstractController
             $qty = max(1, (int) $request->request->get('qty', 1));
             $price = (int) round((float) $request->request->get('price', '100') * 100);
             $discountedPrice = $this->pricing->applyVolumeDiscount(
-                new Money($price, 'CZK'),
+                new Money($price, Currency::CZK),
                 $qty,
             );
 

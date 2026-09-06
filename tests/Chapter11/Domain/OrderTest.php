@@ -22,7 +22,7 @@ final class OrderTest extends TestCase
         $this->assertSame(1500, $order->amount());
         $this->assertSame('customer-1', $order->customerId());
 
-        $events = $order->pullEvents();
+        $events = $order->releaseEvents();
         $this->assertCount(1, $events);
         $this->assertInstanceOf(OrderPlaced::class, $events[0]);
         $this->assertSame($id->value, $events[0]->orderId);
@@ -32,19 +32,19 @@ final class OrderTest extends TestCase
     public function test_pull_events_clears_buffer(): void
     {
         $order = Order::place(OrderId::generate(), 'customer-1', 100);
-        $order->pullEvents();
+        $order->releaseEvents();
 
-        $this->assertSame([], $order->pullEvents());
+        $this->assertSame([], $order->releaseEvents());
     }
 
     public function test_cancel_records_order_cancelled_event(): void
     {
         $order = Order::place(OrderId::generate(), 'customer-1', 200);
-        $order->pullEvents(); // discard placed event
+        $order->releaseEvents(); // discard placed event
 
         $order->cancel('customer changed mind');
 
-        $events = $order->pullEvents();
+        $events = $order->releaseEvents();
         $this->assertCount(1, $events);
         $this->assertInstanceOf(OrderCancelled::class, $events[0]);
         $this->assertSame('customer changed mind', $events[0]->reason);

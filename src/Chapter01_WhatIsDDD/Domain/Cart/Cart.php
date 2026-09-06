@@ -37,7 +37,7 @@ final class Cart
         return array_sum(array_column($this->items, 'qty'));
     }
 
-    public function total(): Price
+    public function totalAmount(): Price
     {
         $total = null;
         foreach ($this->items as ['product' => $product, 'qty' => $qty]) {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Chapter03\Domain;
 
+use App\Shared\Domain\Currency;
 use App\Chapter03_BasicConcepts\Domain\Order\Money;
 use App\Chapter03_BasicConcepts\Domain\Order\Order;
 use App\Chapter03_BasicConcepts\Domain\Order\OrderId;
@@ -25,8 +26,8 @@ final class OrderConfirmationServiceTest extends TestCase
 
     public function test_confirm_order_with_items_succeeds(): void
     {
-        $order = Order::create(OrderId::generate(), 'zákazník-1');
-        $order->addItem('Symfony kniha', 2, new Money(59900, 'CZK'));
+        $order = Order::place(OrderId::generate(), 'zákazník-1');
+        $order->addItem('Symfony kniha', 2, new Money(59900, Currency::CZK));
 
         $this->service->confirm($order);
 
@@ -36,8 +37,8 @@ final class OrderConfirmationServiceTest extends TestCase
     public function test_confirmed_order_is_saved_in_repository(): void
     {
         $id = OrderId::generate();
-        $order = Order::create($id, 'zákazník-1');
-        $order->addItem('Produkt', 1, new Money(10000, 'CZK'));
+        $order = Order::place($id, 'zákazník-1');
+        $order->addItem('Produkt', 1, new Money(10000, Currency::CZK));
 
         $this->service->confirm($order);
 
@@ -49,7 +50,7 @@ final class OrderConfirmationServiceTest extends TestCase
     public function test_confirm_empty_order_throws_domain_exception(): void
     {
         $this->expectException(\DomainException::class);
-        $order = Order::create(OrderId::generate(), 'zákazník-1');
+        $order = Order::place(OrderId::generate(), 'zákazník-1');
         $this->service->confirm($order);
     }
 }

@@ -26,9 +26,9 @@ final class OrderTest extends TestCase
         );
 
         $this->assertSame('CZ', $order->shippingCountry());
-        $this->assertSame(130_000, $order->total()->amount);
+        $this->assertSame(130_000, $order->totalAmount()->amountInCents);
 
-        $events = $order->pullEvents();
+        $events = $order->releaseEvents();
         $this->assertCount(1, $events);
         $this->assertInstanceOf(OrderPlaced::class, $events[0]);
         $this->assertSame($order->id()->value, $events[0]->orderId->value);

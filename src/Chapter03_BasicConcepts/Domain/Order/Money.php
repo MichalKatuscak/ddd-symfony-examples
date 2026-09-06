@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace App\Chapter03_BasicConcepts\Domain\Order;
 
+use App\Shared\Domain\Currency;
+
 final readonly class Money
 {
     public function __construct(
-        public int $amount,
-        public string $currency,
+        public int $amountInCents,
+        public Currency $currency,
     ) {
-        if ($amount < 0) {
+        if ($amountInCents < 0) {
             throw new \InvalidArgumentException('Amount cannot be negative');
         }
     }
@@ -20,16 +22,16 @@ final readonly class Money
         if ($this->currency !== $other->currency) {
             throw new \InvalidArgumentException('Cannot add different currencies');
         }
-        return new self($this->amount + $other->amount, $this->currency);
+        return new self($this->amountInCents + $other->amountInCents, $this->currency);
     }
 
     public function multiply(int $qty): self
     {
-        return new self($this->amount * $qty, $this->currency);
+        return new self($this->amountInCents * $qty, $this->currency);
     }
 
     public function formatted(): string
     {
-        return number_format($this->amount / 100, 2) . ' ' . $this->currency;
+        return number_format($this->amountInCents / 100, 2) . ' ' . $this->currency->value;
     }
 }

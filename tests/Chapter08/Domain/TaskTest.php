@@ -20,7 +20,7 @@ final class TaskTest extends TestCase
     {
         $task = Task::create(TaskId::generate(), 'Implementovat CQRS', 'projekt-1');
         $task->assignTo('member-42');
-        $events = $task->pullEvents();
+        $events = $task->releaseEvents();
         $this->assertCount(1, $events);
         $this->assertInstanceOf(TaskAssigned::class, $events[0]);
         $this->assertSame('member-42', $events[0]->assignedTo);

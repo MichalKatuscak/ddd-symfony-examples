@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Chapter03_BasicConcepts\UI;
 
+use App\Shared\Domain\Currency;
 use App\Chapter03_BasicConcepts\Domain\Email;
 use App\Chapter03_BasicConcepts\Domain\Order\Money;
 use App\Chapter03_BasicConcepts\Domain\Order\Order;
@@ -20,7 +21,7 @@ final class Chapter03Controller extends AbstractController
     #[Route('/examples/zakladni-koncepty', name: 'chapter03')]
     public function index(Request $request): Response
     {
-        $order = Order::create(OrderId::generate(), 'student-1');
+        $order = Order::place(OrderId::generate(), 'student-1');
         $result = null;
         $error = null;
         $voResult = null;
@@ -37,8 +38,8 @@ final class Chapter03Controller extends AbstractController
                             max(1, (int) $request->request->get('qty', 1)),
                             new Money((int) round((float) $request->request->get('price', '100') * 100), 'CZK'),
                         );
-                        $result = 'Položka přidána. Celkem: ' . $order->total()->formatted();
-                        $events = $order->pullEvents();
+                        $result = 'Položka přidána. Celkem: ' . $order->totalAmount()->formatted();
+                        $events = $order->releaseEvents();
                         $events = array_map(function ($e) {
                             $ref = new \ReflectionClass($e);
                             $payload = [];
@@ -56,10 +57,10 @@ final class Chapter03Controller extends AbstractController
                         }, $events);
                     })(),
                     'confirm_with_item' => (function () use ($order, &$result, &$events) {
-                        $order->addItem('Demo produkt', 1, new Money(10000, 'CZK'));
+                        $order->addItem('Demo produkt', 1, new Money(10000, Currency::CZK));
                         $order->confirm();
                         $result = 'Objednávka potvrzena. Stav: ' . $order->status()->value;
-                        $events = $order->pullEvents();
+                        $events = $order->releaseEvents();
                         $events = array_map(function ($e) {
                             $ref = new \ReflectionClass($e);
                             $payload = [];
@@ -80,12 +81,12 @@ final class Chapter03Controller extends AbstractController
                         $order->confirm();
                     })(),
                     'confirm_via_service' => (function () use ($order, &$result, &$events) {
-                        $order->addItem('Demo produkt', 1, new Money(10000, 'CZK'));
+                        $order->addItem('Demo produkt', 1, new Money(10000, Currency::CZK));
                         $repo = new InMemoryOrderRepository();
                         $service = new OrderConfirmationService($repo);
                         $service->confirm($order);
                         $result = 'Objednávka potvrzena přes Domain Service. Stav: ' . $order->status()->value;
-                        $events = $order->pullEvents();
+                        $events = $order->releaseEvents();
                         $events = array_map(function ($e) {
                             $ref = new \ReflectionClass($e);
                             $payload = [];

@@ -174,7 +174,7 @@ final class Chapter12Controller extends AbstractController
 
             return [[
                 'orderId' => substr($order->id()->value, 0, 8) . '…',
-                'total' => $order->total()->formatted(),
+                'total' => $order->totalAmount()->formatted(),
                 'premium' => $premium,
                 'itemCount' => count($order->items()),
             ], null];

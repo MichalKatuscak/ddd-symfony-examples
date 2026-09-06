@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Chapter03_BasicConcepts\Domain\Order;
 
+use App\Shared\Domain\Currency;
 use App\Chapter03_BasicConcepts\Domain\Order\Events\OrderConfirmed;
 use App\Chapter03_BasicConcepts\Domain\Order\Events\OrderItemAdded;
 use App\Shared\Domain\AggregateRoot;
@@ -21,7 +22,7 @@ final class Order extends AggregateRoot
         $this->status = OrderStatus::Pending;
     }
 
-    public static function create(OrderId $id, string $customerId): self
+    public static function place(OrderId $id, string $customerId): self
     {
         return new self($id, $customerId);
     }
@@ -37,7 +38,7 @@ final class Order extends AggregateRoot
             orderId: $this->id->value,
             productName: $name,
             qty: $qty,
-            lineTotalCents: $item->lineTotal()->amount,
+            lineTotalCents: $item->lineTotal()->amountInCents,
         ));
     }
 
@@ -49,7 +50,7 @@ final class Order extends AggregateRoot
         $this->status = OrderStatus::Confirmed;
         $this->record(new OrderConfirmed(
             orderId: $this->id->value,
-            totalAmount: $this->total()->amount,
+            totalAmount: $this->totalAmount()->amountInCents,
         ));
     }
 
@@ -57,12 +58,12 @@ final class Order extends AggregateRoot
     public function customerId(): string { return $this->customerId; }
     public function status(): OrderStatus { return $this->status; }
 
-    public function total(): Money
+    public function totalAmount(): Money
     {
         return array_reduce(
             $this->items,
             fn(Money $carry, OrderItem $item) => $carry->add($item->lineTotal()),
-            new Money(0, 'CZK'),
+            new Money(0, Currency::CZK),
         );
     }
 

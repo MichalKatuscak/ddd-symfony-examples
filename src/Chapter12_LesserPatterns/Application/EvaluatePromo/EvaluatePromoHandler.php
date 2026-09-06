@@ -48,7 +48,7 @@ final class EvaluatePromoHandler
             aboveFreeShippingThreshold: $eligibleForFreeShipping->isSatisfiedBy($order),
             shipsToEU: $inEU->isSatisfiedBy($order),
             notInBlacklist: $notInBlacklist->isSatisfiedBy($order),
-            orderTotalFormatted: $order->total()->formatted(),
+            orderTotalFormatted: $order->totalAmount()->formatted(),
             shippingCountry: $order->shippingCountry(),
         );
     }

@@ -2,7 +2,8 @@
 
 declare(strict_types=1);
 namespace App\Chapter05_CQRS\Domain\Order;
-use App\Shared\Domain\AggregateRoot;
+
+use App\Shared\Domain\Currency;use App\Shared\Domain\AggregateRoot;
 
 class Order extends AggregateRoot
 {
@@ -34,6 +35,6 @@ class Order extends AggregateRoot
 
     public function id(): OrderId { return new OrderId($this->id); }
     public function customerId(): string { return $this->customerId; }
-    public function total(): Money { return new Money($this->totalAmount, 'CZK'); }
+    public function totalAmount(): Money { return new Money($this->totalAmount, Currency::CZK); }
     public function items(): array { return $this->items; }
 }

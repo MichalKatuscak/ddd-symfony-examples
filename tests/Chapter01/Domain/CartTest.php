@@ -19,7 +19,7 @@ final class CartTest extends TestCase
         $cart->add($product, 2);
 
         $this->assertSame(2, $cart->itemCount());
-        $this->assertEquals(new Price(119800, 'CZK'), $cart->total());
+        $this->assertEquals(new Price(119800, 'CZK'), $cart->totalAmount());
     }
 
     public function test_cannot_add_product_with_zero_quantity(): void

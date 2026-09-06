@@ -56,7 +56,7 @@ final class Order extends AggregateRoot
         $order->record(new OrderPlaced(
             orderId: $order->id,
             customerId: $customerId,
-            total: $order->total(),
+            total: $order->totalAmount(),
         ));
 
         return $order;
@@ -88,7 +88,7 @@ final class Order extends AggregateRoot
         return $this->placedAt;
     }
 
-    public function total(): Money
+    public function totalAmount(): Money
     {
         $total = new Money(0);
         foreach ($this->items as $item) {
