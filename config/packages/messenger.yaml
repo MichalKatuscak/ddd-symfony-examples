@@ -18,6 +18,12 @@ framework:
             messenger.bus.default: []
             messenger.bus.command: []
             messenger.bus.query: []
+            # Sběrnice pro doménové a integrační události (ságy, kapitola 14).
+            # Událost bez posluchače není chyba, proto allow_no_handlers.
+            event.bus:
+                default_middleware:
+                    enabled: true
+                    allow_no_handlers: true
 
         routing:
             Symfony\Component\Mailer\Messenger\SendEmailMessage: async
@@ -26,11 +32,3 @@ framework:
 
             # Route your messages to the transports
             # 'App\Message\YourMessage': async
-            'App\Chapter04_Implementation\Application\PlaceOrder\PlaceOrderCommand': sync
-            'App\Chapter04_Implementation\Application\GetOrders\GetOrdersQuery': sync
-            'App\Chapter05_CQRS\Application\PlaceOrder\PlaceOrderCommand': sync
-            'App\Chapter05_CQRS\Application\GetOrders\GetOrdersQuery': sync
-            'App\Chapter07_Sagas\Application\Command\ReserveStockCommand': sync
-            'App\Chapter07_Sagas\Application\Command\ProcessPaymentCommand': sync
-            'App\Chapter07_Sagas\Application\Command\ShipOrderCommand': sync
-            'App\Chapter07_Sagas\Application\Command\CompensateCommand': sync

@@ -6,17 +6,22 @@ namespace App\Chapter03_BasicConcepts\Domain\Order;
 
 use Symfony\Component\Uid\Uuid;
 
+// Stejný tvar jako ostatní identifikátory knihy. Sdílený předek by
+// dovolil předat ProductId tam, kde se čeká CustomerId.
 final readonly class OrderId
 {
     public function __construct(public string $value)
     {
-        if (empty($value)) {
-            throw new \InvalidArgumentException('OrderId cannot be empty');
+        if (!Uuid::isValid($value)) {
+            throw new \InvalidArgumentException('OrderId must be a valid UUID');
         }
     }
 
-    public static function generate(): self
-    {
-        return new self(Uuid::v7()->toRfc4122());
-    }
+    public static function generate(): self { return new self((string) Uuid::v7()); }
+
+    public static function fromString(string $value): self { return new self($value); }
+
+    public function equals(self $other): bool { return $this->value === $other->value; }
+
+    public function __toString(): string { return $this->value; }
 }

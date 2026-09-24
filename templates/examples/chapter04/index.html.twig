@@ -1,138 +1,102 @@
 {% extends 'base.html.twig' %}
+{% form_theme form 'bootstrap_5_layout.html.twig' %}
 {% block title %}Ukázka: Implementace DDD v Symfony{% endblock %}
 {% block body %}
 <div class="container mt-4">
     <div class="alert alert-info">
         Tato ukázka patří ke kapitole
-        <a href="https://ddd-v-symfony.katuscak.cz/implementace-v-symfony"><strong>Implementace DDD v Symfony</strong></a>
+        <a href="https://ddd-v-symfony.katuscak.cz/implementace-v-symfony"><strong>Implementace DDD v Symfony 8</strong></a>
     </div>
     <nav class="mb-3"><a href="{{ path('examples_index') }}">← Zpět na přehled</a></nav>
-    <h1>Ukázka: Repository, Domain Service, Domain Event</h1>
+    <h1>Ukázka: registrace uživatele od kontroleru po databázi</h1>
+    <p>
+        Formulář skládá command <code>RegisterUser</code>, command bus ho předá
+        <code>RegisterUserHandler</code>, ten založí agregát <code>User</code>
+        přes <code>User::register()</code> a uloží ho přes Doctrine.
+        Hodnotové objekty <code>UserId</code> a <code>Email</code> převádějí custom typy,
+        <code>UserName</code> a <code>HashedPassword</code> jsou embeddable.
+    </p>
 
-    {% if result %}<div class="alert alert-success">{{ result }}</div>{% endif %}
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success">{{ message }}</div>
+    {% endfor %}
+    {% for message in app.flashes('error') %}
+        <div class="alert alert-danger">{{ message }}</div>
+    {% endfor %}
 
     <div class="row g-4">
         <div class="col-md-5">
-            <h3>Vytvořit objednávku</h3>
-            <form method="post" data-turbo="false">
-                <div class="mb-2"><input type="text" name="name" value="Symfony kurz" class="form-control" placeholder="Produkt"></div>
-                <div class="mb-2"><input type="number" name="qty" value="3" min="1" class="form-control" placeholder="Množství (≥3 = 10% sleva)"></div>
-                <div class="mb-2"><input type="number" name="price" value="1000" class="form-control" placeholder="Cena za kus (CZK)"></div>
-                <button class="btn btn-primary">Zadat objednávku</button>
-            </form>
-            <p class="text-muted mt-2"><small>OrderPricingService: 2+ ks = −5 %, 3+ ks = −10 %</small></p>
+            <h3>Registrace</h3>
+            {{ form_start(form, {attr: {'data-turbo': 'false'}}) }}
+                {{ form_errors(form) }}
+                {{ form_row(form.name) }}
+                {{ form_row(form.email) }}
+                {{ form_row(form.password) }}
+                <button type="submit" class="btn btn-primary">Registrovat</button>
+            {{ form_end(form) }}
+            <p class="text-muted small mt-3">
+                Zkuste stejný e-mail dvakrát, klidně s velkými písmeny. <code>Email::fromUserInput()</code>
+                adresu normalizuje a druhý zápis zastaví unikátní index v databázi. Handler
+                výjimku <code>UniqueConstraintViolationException</code> přeloží na
+                <code>DuplicateEmailException</code>.
+            </p>
         </div>
+
         <div class="col-md-7">
-            <h3>Uložené objednávky (Doctrine + SQLite)</h3>
-            {% if orders is empty %}
-                <p class="text-muted">Zatím žádné objednávky.</p>
-            {% else %}
+            <h3>Profil (<code>GetUserProfile</code>)</h3>
+            {% if profile %}
                 <table class="table table-sm">
-                    <thead><tr><th>ID</th><th>Zákazník</th><th>Celkem</th></tr></thead>
                     <tbody>
-                    {% for order in orders %}
-                        <tr>
-                            <td><code>{{ order.id().value|slice(0,8) }}…</code></td>
-                            <td>{{ order.customerId() }}</td>
-                            <td>{{ order.totalAmount().formatted() }}</td>
-                        </tr>
-                    {% endfor %}
+                        <tr><th>ID</th><td><code>{{ profile.id }}</code></td></tr>
+                        <tr><th>Jméno</th><td>{{ profile.name }}</td></tr>
+                        <tr><th>E-mail</th><td>{{ profile.email }}</td></tr>
+                        <tr><th>Registrace</th><td>{{ profile.createdAt|date('j. n. Y H:i:s') }}</td></tr>
                     </tbody>
                 </table>
+                <p class="text-muted small">
+                    Query handler čte přes repozitář agregátu a ven pouští jen DTO
+                    <code>UserProfile</code>, ne agregát ani hodnotové objekty.
+                </p>
+            {% else %}
+                <p class="text-muted">Po registraci se zde zobrazí profil nového uživatele.</p>
             {% endif %}
+
+            {% for payload in app.flashes('event') %}
+                <h4 class="mt-4">Doručená událost <code>UserRegistered</code></h4>
+                <pre class="bg-light p-3 rounded small">{{ payload }}</pre>
+                <p class="text-muted small">
+                    Událost nese primitivy: odebírá ji i kontext Identity. Handler ji odeslal
+                    až po <code>flush()</code>, posluchač z ní poskládal přesměrování na profil
+                    bez dotazu do <code>UserRepository</code>.
+                </p>
+            {% endfor %}
         </div>
     </div>
 
     <hr class="my-5">
-    <h2>Value Object — Money za kulisami</h2>
-    <p>Cena v agregátu není <code>int</code> — je to <code>Money</code> Value Object. Doctrine ho persistuje jako integer haléřů.</p>
-    <div class="row g-4">
-        <div class="col-md-6">
-            <pre class="bg-light p-3 rounded small">// V Order agregátu:
-private int $totalAmount; // haléře v DB
+    <h2>Enum pro stav objednávky</h2>
+    <p>
+        <code>OrderStatus</code> je backed enum a přechodová pravidla drží v metodě
+        <code>allowedTransitions()</code>. Tabulka se generuje přímo z enumu.
+    </p>
+    <table class="table table-sm w-auto">
+        <thead><tr><th>Stav</th><th>Povolené přechody</th></tr></thead>
+        <tbody>
+        {% for status in statuses %}
+            <tr>
+                <td><code>{{ status.value }}</code></td>
+                <td>
+                    {% for target in status.allowedTransitions() %}
+                        <span class="badge bg-secondary">{{ target.value }}</span>
+                    {% else %}
+                        <span class="text-muted">koncový stav</span>
+                    {% endfor %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
 
-public function totalAmount(): Money {
-    return new Money($this->totalAmount, 'CZK');
-}
-
-// Money Value Object:
-final readonly class Money {
-    public int $amount;    // haléře (int)
-    public string $currency;
-
-    public function formatted(): string {
-        return number_format($amount / 100, 2)
-            . ' ' . $currency;
-    }
-}</pre>
-        </div>
-        <div class="col-md-6">
-            <table class="table table-sm">
-                <thead><tr><th>Vrstva</th><th>Typ</th><th>Hodnota</th></tr></thead>
-                <tbody>
-                    <tr><td>Databáze</td><td><code>INTEGER</code></td><td><code>270000</code></td></tr>
-                    <tr><td>PHP (Money)</td><td><code>Money</code></td><td><code>Money(270000, 'CZK')</code></td></tr>
-                    <tr><td>Zobrazení</td><td><code>string</code></td><td><code>2 700,00 CZK</code></td></tr>
-                </tbody>
-            </table>
-            <p class="text-muted small">Money se nevyskytuje nikde jako <code>int</code> v doméně — type safety je garantována.</p>
-        </div>
-    </div>
-
-    <hr class="my-5">
-    <h2>Domain Events pipeline</h2>
-    <p>Po zadání objednávky agregát zvedne <code>OrderPlaced</code> event. Application layer ho vyzvedne přes <code>pullEvents()</code>.</p>
-
-    {% if dispatchedEvents %}
-        <div class="card border-warning mb-3">
-            <div class="card-header bg-warning"><strong>Dispatched Domain Events</strong></div>
-            <ul class="list-group list-group-flush">
-                {% for event in dispatchedEvents %}
-                <li class="list-group-item">
-                    <span class="badge bg-warning text-dark me-2">{{ event.class }}</span>
-                    <small class="text-muted">{{ event.occurredAt }}</small>
-                    <pre class="mt-1 mb-0 small bg-light p-1 rounded">{{ event.payload|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-    {% else %}
-        <div class="alert alert-light border">Zadej objednávku výše — event se zobrazí zde.</div>
-    {% endif %}
-
-    <pre class="bg-light p-3 rounded small">// Application layer (controller):
-$order = Order::place(...);
-$this->orders->save($order);           // persist
-
-$events = $order->pullEvents();        // ← vyzvedni eventy
-foreach ($events as $event) {
-    $this->eventDispatcher->dispatch($event); // ← zpracuj
-}
-
-// Event listener (např. posílání e-mailu, invalidace cache...)
-class OrderPlacedListener {
-    public function __invoke(OrderPlaced $event): void {
-        // $event->orderId, $event->customerId, $event->totalAmount
-    }
-}</pre>
-    <hr class="my-5">
-    <h2>Specification Pattern</h2>
-    <p>Specification zapouzdřuje doménové pravidlo do samostatného objektu. Místo podmínek rozsetých po kódu máme pojmenovanou, znovupoužitelnou a testovatelnou specifikaci.</p>
-    <pre class="bg-light p-3 rounded small">final readonly class MinimumOrderAmountSpecification
-{
-    public function __construct(private int $minimumAmountCents) {}
-
-    public function isSatisfiedBy(Order $order): bool
-    {
-        return $order->totalAmount()->amountInCents >= $this->minimumAmountCents;
-    }
-}
-
-// Použití:
-$spec = new MinimumOrderAmountSpecification(50000); // 500 CZK
-if (!$spec->isSatisfiedBy($order)) {
-    throw new DomainException('Objednávka nesplňuje minimální hodnotu');
-}</pre>
     <nav class="d-flex justify-content-between mt-5 pt-3 border-top">
         {% if prev_route is defined and prev_route %}
             <a href="{{ path(prev_route) }}">← {{ prev_title }}</a>

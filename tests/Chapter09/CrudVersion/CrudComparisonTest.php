@@ -4,54 +4,66 @@ declare(strict_types=1);
 
 namespace App\Tests\Chapter09\CrudVersion;
 
-use App\Chapter09_Migration\CrudVersion\Task as CrudTask;
-use App\Chapter09_Migration\Domain\Task\Task as DddTask;
-use App\Chapter09_Migration\Domain\Task\TaskId;
-use App\Chapter09_Migration\Domain\Task\TaskStatus;
+use App\Chapter04_Implementation\UserManagement\Domain\ValueObject\HashedPassword;
+use App\Chapter04_Implementation\UserManagement\Domain\ValueObject\UserId;
+use App\Chapter04_Implementation\UserManagement\Domain\ValueObject\UserName;
+use App\Chapter09_Migration\CrudVersion\User as CrudUser;
+use App\Chapter09_Migration\UserManagement\Domain\Exception\UserAlreadyActivatedException;
+use App\Chapter09_Migration\UserManagement\Domain\Model\User;
+use App\Chapter09_Migration\UserManagement\Domain\ValueObject\Email;
 use PHPUnit\Framework\TestCase;
 
+/**
+ * Tatáž pravidla před migrací a po ní. CRUD entita je nezná,
+ * doménový model je vymáhá sám.
+ */
 final class CrudComparisonTest extends TestCase
 {
-    public function testCrudAllowsSkippingStates(): void
+    public function test_crud_entity_accepts_any_status(): void
     {
-        $task = new CrudTask();
-        $task->setId('task-1');
-        $task->setTitle('Implementovat feature');
-        // CRUD allows going directly to 'done' without passing through 'in_progress'
-        $task->setStatus('done');
+        $user = new CrudUser();
+        $user->setStatus('pending_verification');
+        // Žádný přechod, žádná kontrola – překlep projde až do databáze.
+        $user->setStatus('aktivni');
 
-        $this->assertSame('done', $task->getStatus());
+        self::assertSame('aktivni', $user->getStatus());
     }
 
-    public function testCrudAllowsInvalidStatus(): void
+    public function test_crud_entity_accepts_any_email(): void
     {
-        $task = new CrudTask();
-        $task->setId('task-1');
-        $task->setTitle('Libovolný úkol');
-        // CRUD accepts any string — no validation
-        $task->setStatus('banana');
+        $user = new CrudUser();
+        $user->setEmail('not-an-email');
 
-        $this->assertSame('banana', $task->getStatus());
+        self::assertSame('not-an-email', $user->getEmail());
     }
 
-    public function testDddPreventsSkippingStates(): void
+    public function test_crud_entity_can_be_activated_twice(): void
     {
-        $this->expectException(\DomainException::class);
+        $user = new CrudUser();
+        $user->setStatus('active');
+        $user->setStatus('active'); // o druhé aktivaci nikdo neví
 
-        $task = DddTask::create(TaskId::generate(), 'Implementovat feature', 'projekt-1');
-        // DDD Task requires start() before complete()
-        $task->complete();
+        self::assertSame('active', $user->getStatus());
     }
 
-    public function testDddUsesEnumForStatus(): void
+    public function test_domain_model_rejects_invalid_email(): void
     {
-        $task = DddTask::create(TaskId::generate(), 'Implementovat feature', 'projekt-1');
-        $task->start('member-1');
-        $task->complete();
+        $this->expectException(\InvalidArgumentException::class);
+        new Email('not-an-email');
+    }
 
-        $status = $task->status();
-        $this->assertInstanceOf(TaskStatus::class, $status);
-        $this->assertSame(TaskStatus::Done, $status);
-        $this->assertSame('done', $status->value);
+    public function test_domain_model_rejects_second_activation(): void
+    {
+        $user = User::register(
+            UserId::generate(),
+            new UserName('Jan Novák'),
+            new Email('jan@firma.cz'),
+            HashedPassword::fromPlainText('SecurePass123'),
+        );
+        $token = $user->verificationToken();
+        $user->activate($token);
+
+        $this->expectException(UserAlreadyActivatedException::class);
+        $user->activate($token);
     }
 }

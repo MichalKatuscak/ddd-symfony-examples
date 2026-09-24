@@ -7,119 +7,102 @@
         <a href="https://ddd-v-symfony.katuscak.cz/cqrs"><strong>CQRS v Symfony 8</strong></a>
     </div>
     <nav class="mb-3"><a href="{{ path('examples_index') }}">← Zpět na přehled</a></nav>
-    <h1>Ukázka: CQRS — Commands a Queries</h1>
-    <p>Zápis jde přes <code>PlaceOrderCommand</code>, čtení přes <code>GetOrdersQuery</code> — dva oddělené toky dat.</p>
+    <h1>Ukázka: příkaz, projekce a dotaz nad read modelem</h1>
+    <p>
+        Zápis jde přes <code>PlaceOrder</code> na command bus, čtení přes <code>ListOrders</code>
+        na query bus. Mezi nimi stojí projektor: z události <code>OrderPlacedIntegrationEvent</code>
+        založí řádek v denormalizované tabulce <code>ch05_order_dashboard</code>
+        a dotaz čte jen z ní, přes DBAL, bez agregátu.
+    </p>
 
-    {% if result %}<div class="alert alert-success">{{ result }}</div>{% endif %}
+    {% for message in app.flashes('success') %}
+        <div class="alert alert-success">{{ message }}</div>
+    {% endfor %}
+    {% if errors %}
+        <div class="alert alert-danger">
+            <strong>Command neprošel validací (422):</strong>
+            <ul class="mb-0">{% for error in errors %}<li><code>{{ error }}</code></li>{% endfor %}</ul>
+        </div>
+    {% endif %}
 
     <div class="row g-4">
         <div class="col-md-5">
-            <h3>Command (Write side)</h3>
+            <h3>Zápis: <code>PlaceOrder</code></h3>
             <form method="post" data-turbo="false">
-                <div class="mb-2"><input type="text" name="customer" value="zákazník-1" class="form-control" placeholder="ID zákazníka"></div>
-                <div class="mb-2"><input type="text" name="product" value="Symfony kurz" class="form-control" placeholder="Produkt"></div>
-                <div class="mb-2"><input type="number" name="qty" value="1" min="1" class="form-control" placeholder="Množství"></div>
-                <div class="mb-2"><input type="number" name="price" value="999" class="form-control" placeholder="Cena (CZK)"></div>
-                <button class="btn btn-primary">Dispatch PlaceOrderCommand</button>
+                <div class="mb-2">
+                    <label class="form-label">Zákazník</label>
+                    <select name="customerId" class="form-select">
+                        {% for id, name in customers %}
+                            <option value="{{ id }}" {{ id == customer_id ? 'selected' }}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Produkt</label>
+                    <select name="productId" class="form-select">
+                        {% for id, product in products %}
+                            <option value="{{ id }}">{{ product.name }} ({{ (product.price / 100)|number_format(2, ',', ' ') }} Kč)</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Množství</label>
+                    <input type="number" name="quantity" value="1" class="form-control">
+                    <div class="form-text">Zkuste 0: command odmítne validace, handler se nespustí.</div>
+                </div>
+                <button class="btn btn-primary">Odeslat PlaceOrder</button>
             </form>
         </div>
         <div class="col-md-7">
-            <h3>Query (Read side) — OrderView</h3>
+            <h3>Čtení: <code>ListOrders</code></h3>
+            <p class="small text-muted">
+                Přehled objednávek zákazníka {{ customers[customer_id] }}.
+                <a href="{{ path('chapter05', {zakaznik: customer_id == customers|keys|first ? customers|keys|last : customers|keys|first}) }}">Přepnout zákazníka</a>
+            </p>
             {% if orders is empty %}
-                <p class="text-muted">Zatím žádné objednávky. Zadej první příkaz.</p>
+                <p class="text-muted">Zatím žádné objednávky.</p>
             {% else %}
                 <table class="table table-sm">
-                    <thead><tr><th>ID</th><th>Zákazník</th><th>Položky</th><th>Celkem</th></tr></thead>
+                    <thead><tr><th>Objednávka</th><th>Stav</th><th>Celkem</th><th>Přijata</th></tr></thead>
                     <tbody>
                     {% for order in orders %}
                         <tr>
-                            <td><code>{{ order.id }}</code></td>
-                            <td>{{ order.customerId }}</td>
-                            <td>{{ order.itemCount }}</td>
-                            <td>{{ order.total }}</td>
+                            <td><code>{{ order.orderId|slice(0, 13) }}…</code></td>
+                            <td><span class="badge bg-secondary">{{ order.status }}</span></td>
+                            <td>{{ (order.totalAmountInCents / 100)|number_format(2, ',', ' ') }} Kč</td>
+                            <td>{{ order.placedAt|date('j. n. Y H:i:s') }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>
                 </table>
             {% endif %}
+            <p class="small text-muted">
+                Stav <code>placed</code> je slovník obrazovky. Agregát je po
+                <code>placeWithItems()</code> ve stavu <code>Confirmed</code>; read model smí mít
+                vlastní popisky, protože podle něj nikdo nerozhoduje o přechodech.
+            </p>
         </div>
     </div>
 
     <hr class="my-5">
-    <h2>Write Model vs. Read Model</h2>
-    <p>Command side a Query side používají různé reprezentace dat — každá optimalizovaná pro svůj účel.</p>
+    <h2>Co se stane po odeslání</h2>
+    <ol>
+        <li><code>PlaceOrderHandler</code> (jen na command busu) založí agregát přes
+            <code>Order::placeWithItems()</code>. Ten nahraje <code>OrderPlaced</code>,
+            <code>OrderItemAdded</code> a <code>OrderConfirmed</code>.</li>
+        <li>Handler z <code>OrderPlaced</code> sestaví integrační událost s položkami a součtem.
+            Dílčí události zůstávají uvnitř kontextu.</li>
+        <li><code>OrderDashboardProjector</code> zapíše řádek podmíněným upsertem: opakované
+            nebo opožděné doručení nevrátí novější stav zpět.</li>
+        <li>Po přesměrování <code>ListOrdersHandler</code> čte tabulku přes DBAL a vrací
+            <code>OrderSummaryViewModel</code>.</li>
+    </ol>
+    <p class="small text-muted">
+        Kniha integrační událost ukládá do outboxu a projektor běží ve workeru, takže mezi
+        zápisem a čtením je okno eventual consistency. Ukázka vše zpracuje synchronně v jednom
+        požadavku; Outbox ukazuje samostatná ukázka <code>Chapter11_OutboxPattern</code>.
+    </p>
 
-    <div class="row g-4">
-        <div class="col-md-6">
-            <div class="card h-100 border-danger">
-                <div class="card-header bg-danger text-white"><strong>Write Model — Order agregát</strong></div>
-                <div class="card-body">
-                    <p class="text-muted small">Chrání invarianty. Žádné veřejné gettery na data.</p>
-                    <pre class="bg-light p-2 rounded small">class Order extends AggregateRoot {
-    private string $id;          // skryté
-    private string $customerId;  // skryté
-    private int $totalAmount;    // skryté
-    private array $items;        // skryté
-
-    // Sémantické metody (ne settery):
-    public static function place(...): self
-    public function confirm(): void
-    public function cancel(): void
-    public function pullEvents(): array
-}</pre>
-                    <p class="text-muted small mt-2">Načítá se přes <strong>ORM Repository</strong> — celý agregát do paměti.</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card h-100 border-success">
-                <div class="card-header bg-success text-white"><strong>Read Model — OrderView DTO</strong></div>
-                <div class="card-body">
-                    <p class="text-muted small">Flat objekt optimalizovaný pro zobrazení.</p>
-                    <pre class="bg-light p-2 rounded small">final readonly class OrderView {
-    public string $id;           // veřejné
-    public string $customerId;   // veřejné
-    public string $total;        // formátováno
-    public int $itemCount;       // vypočteno
-}</pre>
-                    <p class="text-muted small mt-2">Plněn přes <strong>DBAL Connection</strong> — raw SQL, žádný ORM overhead:</p>
-                    <pre class="bg-light p-2 rounded small">SELECT id, customer_id,
-       total_amount, items
-FROM ch05_orders
-ORDER BY rowid DESC</pre>
-                </div>
-            </div>
-        </div>
-    </div>
-    <p class="text-muted mt-3 small">Write model zajišťuje konzistenci (invarianty). Read model zajišťuje výkon (žádné lazy loading, žádný overhead ORM). Každá strana se vyvíjí nezávisle.</p>
-
-    <hr class="my-5">
-    <h2>Messenger Bus konfigurace</h2>
-    <p>CQRS v Symfony Messenger využívá <strong>dva oddělené busy</strong> — command bus pro zápis, query bus pro čtení.</p>
-    <div class="row g-4">
-        <div class="col-md-6">
-            <pre class="bg-light p-3 rounded small">// Controller injektuje dva busy:
-public function __construct(
-    #[Target('messenger.bus.command')]
-    private MessageBusInterface $commandBus,
-
-    #[Target('messenger.bus.query')]
-    private MessageBusInterface $queryBus,
-) {}</pre>
-        </div>
-        <div class="col-md-6">
-            <pre class="bg-light p-3 rounded small">// messenger.yaml — konfigurace:
-framework:
-    messenger:
-        buses:
-            messenger.bus.command: []
-            messenger.bus.query: []
-        routing:
-            PlaceOrderCommand: sync
-            GetOrdersQuery: sync</pre>
-        </div>
-    </div>
-    <p class="text-muted small">Command bus zpracovává příkazy (mění stav), Query bus zpracovává dotazy (čte stav). V produkci lze command bus přepnout na async transport.</p>
     <nav class="d-flex justify-content-between mt-5 pt-3 border-top">
         {% if prev_route is defined and prev_route %}
             <a href="{{ path(prev_route) }}">← {{ prev_title }}</a>

@@ -1,0 +1,18 @@
+# Kapitola Implementace v Symfony (ukázka Chapter04_Implementation).
+#
+# Kniha mapuje agregát atributy přímo na doménové třídě a VO převádí
+# custom typy email_vo a user_id. Všechny ukázky sdílejí jednu databázi
+# a jeden registr DBAL typů, proto jména nesou prefix ch04_.
+doctrine:
+    dbal:
+        types:
+            ch04_email: App\Chapter04_Implementation\UserManagement\Infrastructure\Doctrine\Type\EmailType
+            ch04_user_id: App\Chapter04_Implementation\UserManagement\Infrastructure\Doctrine\Type\UserIdType
+    orm:
+        mappings:
+            Chapter04UserManagement:
+                type: attribute
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Chapter04_Implementation/UserManagement/Domain'
+                prefix: 'App\Chapter04_Implementation\UserManagement\Domain'
+                alias: Chapter04UserManagement

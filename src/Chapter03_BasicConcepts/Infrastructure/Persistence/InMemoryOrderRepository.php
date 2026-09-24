@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace App\Chapter03_BasicConcepts\Infrastructure\Persistence;
 
+use App\Chapter03_BasicConcepts\Domain\Order\Exception\OrderNotFoundException;
 use App\Chapter03_BasicConcepts\Domain\Order\Order;
 use App\Chapter03_BasicConcepts\Domain\Order\OrderId;
-use App\Chapter03_BasicConcepts\Domain\Repository\OrderRepositoryInterface;
+use App\Chapter03_BasicConcepts\Domain\Repository\OrderRepository;
 
-final class InMemoryOrderRepository implements OrderRepositoryInterface
+/**
+ * Implementace pro testy a ukázku. Doménová vrstva nepozná, jestli
+ * agregát žije v paměti, nebo v databázi.
+ */
+final class InMemoryOrderRepository implements OrderRepository
 {
-    /** @var Order[] */
+    /** @var array<string, Order> */
     private array $orders = [];
 
     public function save(Order $order): void
@@ -18,13 +23,8 @@ final class InMemoryOrderRepository implements OrderRepositoryInterface
         $this->orders[$order->id->value] = $order;
     }
 
-    public function findById(OrderId $id): ?Order
+    public function get(OrderId $id): Order
     {
-        return $this->orders[$id->value] ?? null;
-    }
-
-    public function findAll(): array
-    {
-        return array_values($this->orders);
+        return $this->orders[$id->value] ?? throw OrderNotFoundException::withId($id);
     }
 }

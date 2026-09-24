@@ -6,36 +6,37 @@ namespace App\Tests\Chapter01\Domain;
 
 use App\Chapter01_WhatIsDDD\Domain\SharedKernel\ProductId;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Uid\Uuid;
 
 final class SharedKernelProductIdTest extends TestCase
 {
-    public function test_creation_with_valid_value(): void
+    public function test_generate_produces_valid_unique_uuid(): void
     {
-        $id = new ProductId('prod-123');
+        $first = ProductId::generate();
+        $second = ProductId::generate();
 
-        $this->assertSame('prod-123', $id->value);
+        self::assertTrue(Uuid::isValid($first->value));
+        self::assertFalse($first->equals($second));
     }
 
-    public function test_empty_value_throws_invalid_argument_exception(): void
+    public function test_non_uuid_value_throws(): void
+    {
+        // Na formátu sdílené identity se musí shodnout oba kontexty.
+        $this->expectException(\InvalidArgumentException::class);
+        new ProductId('prod-42');
+    }
+
+    public function test_empty_value_throws(): void
     {
         $this->expectException(\InvalidArgumentException::class);
-
         new ProductId('');
     }
 
-    public function test_equals_returns_true_for_same_value(): void
+    public function test_equality_by_value(): void
     {
-        $id1 = new ProductId('prod-42');
-        $id2 = new ProductId('prod-42');
+        $value = ProductId::generate()->value;
 
-        $this->assertTrue($id1->equals($id2));
-    }
-
-    public function test_equals_returns_false_for_different_value(): void
-    {
-        $id1 = new ProductId('prod-42');
-        $id2 = new ProductId('prod-99');
-
-        $this->assertFalse($id1->equals($id2));
+        self::assertTrue(ProductId::fromString($value)->equals(new ProductId($value)));
+        self::assertSame($value, (string) ProductId::fromString($value));
     }
 }

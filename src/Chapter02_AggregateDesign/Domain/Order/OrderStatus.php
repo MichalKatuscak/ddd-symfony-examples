@@ -6,7 +6,7 @@ namespace App\Chapter02_AggregateDesign\Domain\Order;
 
 /**
  * Stavy tvoří uzavřený graf. Cesty, které v něm nejsou, nejsou „ještě
- * neimplementované" – jsou zakázané.
+ * neimplementované“ – jsou zakázané.
  */
 enum OrderStatus: string
 {

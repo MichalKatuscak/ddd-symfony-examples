@@ -46,7 +46,7 @@ final class AggregateRootTest extends TestCase
         };
 
         $aggregate->doSomething();
-        $aggregate->releaseEvents(); // first call — consumes events
+        $aggregate->releaseEvents(); // první volání frontu vyprázdní
 
         $second = $aggregate->releaseEvents();
 

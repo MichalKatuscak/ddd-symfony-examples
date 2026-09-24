@@ -7,33 +7,39 @@ namespace App\Chapter02_AggregateDesign\Domain\Order;
 use App\Chapter02_AggregateDesign\Domain\Order\Event\OrderCancelled;
 use App\Chapter02_AggregateDesign\Domain\Order\Event\OrderConfirmed;
 use App\Chapter02_AggregateDesign\Domain\Order\Event\OrderItemAdded;
+use App\Chapter02_AggregateDesign\Domain\Order\Event\OrderPaid;
 use App\Chapter02_AggregateDesign\Domain\Order\Event\OrderPlaced;
 use App\Chapter02_AggregateDesign\Domain\Order\Event\OrderShipped;
 use App\Chapter02_AggregateDesign\Domain\Order\Exception\EmptyOrderException;
 use App\Chapter02_AggregateDesign\Domain\Order\Exception\InvalidOrderStateTransitionException;
 use App\Chapter02_AggregateDesign\Domain\Order\Exception\OrderLockedBySagaException;
+// ShipmentId patří cizímu kontextu – přes hranici jde jen identita.
+use App\Chapter02_AggregateDesign\Domain\Shipping\ShipmentId;
 use App\Shared\Domain\AggregateRoot;
 use App\Shared\Domain\Money;
 
 /**
- * Kanonický agregát z kapitoly o návrhu agregátu.
+ * Kanonický agregát z kapitoly Návrh agregátu (07.07).
  *
- * Drží tři věci, na kterých kapitola staví: hranici konzistence (položky
- * patří dovnitř, zákazník a produkt jen identitou), uzavřený stavový graf
- * a zámek pro dlouhotrvající proces.
+ * Oproti knize bez perzistence: položky drží pole místo Doctrine
+ * Collection a OrderItem nemá zpětnou referenci na kořen. Důvod
+ * a mapování popisuje README ukázky.
  */
-final class Order extends AggregateRoot
+class Order extends AggregateRoot
 {
     /** @var list<OrderItem> */
     private array $items = [];
 
     // Asymetrická viditelnost: přečte kdokoli, zapíše jen kód uvnitř třídy.
+    // Getter tím odpadá a stavové přechody zůstávají jediným místem zápisu.
     public private(set) OrderStatus $status;
 
-    // Čas potvrzení drží agregát, protože na něm stojí storno lhůta.
+    // Čas potvrzení drží agregát, protože na něm stojí doménové pravidlo:
+    // storno lhůta v kapitole o autorizaci.
     public private(set) ?\DateTimeImmutable $placedAt = null;
 
-    // Semantic lock: dokud nad objednávkou běží proces, uživatel do ní nesáhne.
+    // Semantic lock: dokud nad objednávkou běží proces, nesmí do ní sáhnout
+    // uživatel. Podrobněji v kapitole o ságách, sekce Izolace ság.
     private bool $sagaInProgress = false;
 
     private function __construct(
@@ -43,6 +49,7 @@ final class Order extends AggregateRoot
         $this->status = OrderStatus::Draft;
     }
 
+    // Kanonická továrna knihy: identita a vlastník, nic víc.
     public static function place(OrderId $id, CustomerId $customerId): self
     {
         $order = new self($id, $customerId);
@@ -51,10 +58,9 @@ final class Order extends AggregateRoot
         return $order;
     }
 
-    /**
-     * Invariant „objednávka má alespoň jednu položku“ vymáhá signatura –
-     * bez první položky objednávka nevznikne.
-     */
+    // Invariant „objednávka má alespoň jednu položku“ vymáhá signatura:
+    // bez první položky objednávka nevznikne. Vedle place() je to druhá
+    // továrna, ne jeho náhrada.
     public static function placeWithFirstItem(
         CustomerId $customerId,
         ProductId $productId,
@@ -64,6 +70,7 @@ final class Order extends AggregateRoot
     ): self {
         $order = self::place(OrderId::generate(), $customerId);
         $order->addItem($productId, $quantity, $unitPrice);
+        // Objednávka přišla kompletní, takže rovnou opouští Draft.
         $order->confirm($at);
 
         return $order;
@@ -78,7 +85,7 @@ final class Order extends AggregateRoot
             );
         }
 
-        // Invariant: jedna položka na produkt – množství se sčítá, neduplikuje.
+        // INVARIANT: jedna položka na produkt – sčítáme quantity, neduplikujeme
         foreach ($this->items as $existing) {
             if ($existing->productId->equals($productId)) {
                 $existing->increaseQuantity($quantity);
@@ -92,6 +99,9 @@ final class Order extends AggregateRoot
         $this->record(new OrderItemAdded($this->id, $productId, $quantity));
     }
 
+    // Čas jde vložit zvenku ze stejného důvodu jako u cancel(): scénář
+    // „potvrzeno v 10:00, stornováno ve 12:00“ by se bez toho dal
+    // otestovat jen reflexí.
     public function confirm(?\DateTimeImmutable $at = null): void
     {
         if ($this->status !== OrderStatus::Draft) {
@@ -110,9 +120,16 @@ final class Order extends AggregateRoot
         $this->record(new OrderConfirmed($this->id, $this->customerId, $this->placedAt));
     }
 
-    // Bez tohohle přechodu je ship() nedosažitelná: do Paid se objednávka jinak nedostane.
+    // Bez tohohle přechodu je ship() nedosažitelná: do stavu Paid
+    // se objednávka jinak nedostane.
     public function markPaid(): void
     {
+        // Příkaz jde přes asynchronní transport s garancí at-least-once,
+        // takže opakované doručení není chyba volajícího.
+        if ($this->status === OrderStatus::Paid) {
+            return;
+        }
+
         if ($this->status !== OrderStatus::Confirmed) {
             throw InvalidOrderStateTransitionException::cannotTransition(
                 $this->status->value,
@@ -121,10 +138,15 @@ final class Order extends AggregateRoot
         }
 
         $this->status = OrderStatus::Paid;
+        $this->record(new OrderPaid($this->id, new \DateTimeImmutable()));
     }
 
     public function ship(ShipmentId $shipmentId): void
     {
+        if ($this->status === OrderStatus::Shipped) {
+            return;
+        }
+
         if ($this->status !== OrderStatus::Paid) {
             throw InvalidOrderStateTransitionException::cannotTransition(
                 $this->status->value,
@@ -134,30 +156,6 @@ final class Order extends AggregateRoot
 
         $this->status = OrderStatus::Shipped;
         $this->record(new OrderShipped($this->id, $shipmentId, new \DateTimeImmutable()));
-    }
-
-    public function cancel(string $reason, \DateTimeImmutable $when): void
-    {
-        // Zámek drží proces, ne uživatel.
-        if ($this->sagaInProgress) {
-            throw new OrderLockedBySagaException($this->id);
-        }
-
-        // Odeslanou ani doručenou zásilku storno nevrátí – tam nastupuje kompenzace.
-        if (in_array($this->status, [OrderStatus::Shipped, OrderStatus::Delivered], true)) {
-            throw InvalidOrderStateTransitionException::cannotTransition(
-                $this->status->value,
-                OrderStatus::Cancelled->value,
-            );
-        }
-
-        // Opakované storno není chyba volajícího, jen už není co dělat.
-        if ($this->status === OrderStatus::Cancelled) {
-            return;
-        }
-
-        $this->status = OrderStatus::Cancelled;
-        $this->record(new OrderCancelled($this->id, $this->customerId, $reason, $when));
     }
 
     public function lockForSaga(): void
@@ -170,20 +168,54 @@ final class Order extends AggregateRoot
         $this->sagaInProgress = false;
     }
 
-    public function isLockedBySaga(): bool
+    // Čas přebírá parametr, ne new \DateTimeImmutable() uvnitř: kapitola
+    // o autorizaci na něm staví storno lhůtu a testy potřebují zadat vlastní.
+    public function cancel(string $reason, \DateTimeImmutable $when): void
     {
-        return $this->sagaInProgress;
+        // Zámek drží proces, ne uživatel. Bez téhle podmínky by storno
+        // prošlo uprostřed ságy, ta by dál strhla platbu a vytvořila
+        // zásilku k objednávce, která už neexistuje.
+        if ($this->sagaInProgress) {
+            throw new OrderLockedBySagaException($this->id);
+        }
+
+        // Storno je hrana grafu jako každá jiná: odeslanou ani doručenou
+        // zásilku zpátky nevrátí, tam nastupuje kompenzace v ságe.
+        // Zaplacenou objednávku storno vrátit smí.
+        if (in_array($this->status, [OrderStatus::Shipped, OrderStatus::Delivered], true)) {
+            throw InvalidOrderStateTransitionException::cannotTransition(
+                $this->status->value,
+                OrderStatus::Cancelled->value,
+            );
+        }
+
+        // Opakované storno není chyba volajícího, jen už není co dělat.
+        // Bez téhle větve by retry ságy shodil handler.
+        if ($this->status === OrderStatus::Cancelled) {
+            return;
+        }
+
+        $this->status = OrderStatus::Cancelled;
+        $this->record(new OrderCancelled(
+            $this->id,
+            $this->customerId,
+            $reason,
+            $when,
+        ));
     }
 
-    // Vztahový invariant: vlastnictví zná agregát, ne Voter.
+    // Vlastnictví patří agregátu, ne Voteru. Kapitola o autorizaci
+    // na tom staví celé rozhodování o přístupu.
     public function isOwnedBy(CustomerId $customerId): bool
     {
         return $this->customerId->equals($customerId);
     }
 
     /**
-     * Odpověď pro UI. Musí znát i zámek – jinak šablona nabídne tlačítko,
-     * jehož příkaz vždycky skončí v dead-letter frontě.
+     * Dotaz pro UI z ukázky kapitoly o autorizaci (Chapter10_Authorization).
+     * Kapitola Návrh agregátu ho nevypisuje; verze se storno lhůtou
+     * a parametrem $now je až v kapitole Autorizace v DDD. Musí znát
+     * i zámek – jinak šablona nabídne tlačítko, jehož příkaz vždycky selže.
      */
     public function isCancellable(): bool
     {
@@ -200,8 +232,8 @@ final class Order extends AggregateRoot
 
     public function totalAmount(): Money
     {
-        // Guard je nutný: place() prázdnou objednávku pustí, takže bez něj
-        // by součet vracel tichou nulu v natvrdo zvolené měně.
+        // Guard je nutný: kanonické place() prázdnou objednávku pustí.
+        // Bez něj by součet vracel tichou nulu v natvrdo zvolené měně.
         if ($this->items === []) {
             throw EmptyOrderException::cannotBePlaced();
         }

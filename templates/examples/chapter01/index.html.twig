@@ -1,6 +1,8 @@
 {% extends 'base.html.twig' %}
-{% block title %}Ukázka: Co je DDD — čistý doménový model{% endblock %}
+{% macro money(m) %}{{ (m.amountInCents / 100)|number_format(2, ',', ' ') }} {{ m.currency.value }}{% endmacro %}
+{% block title %}Ukázka: Co je DDD – čistý doménový model{% endblock %}
 {% block body %}
+{% import _self as fmt %}
 <div class="container mt-4">
     <div class="alert alert-info">
         Tato ukázka patří ke kapitole
@@ -8,7 +10,7 @@
     </div>
     <nav class="mb-3"><a href="{{ path('examples_index') }}">← Zpět na přehled</a></nav>
     <h1>Ukázka: Čistý doménový model</h1>
-    <p>Nákupní košík bez databáze — čistá doménová logika v paměti.</p>
+    <p>Nákupní košík bez databáze: doménová logika v paměti, bez závislosti na frameworku.</p>
 
     <form method="post" data-turbo="false">
         <table class="table">
@@ -17,7 +19,7 @@
             {% for i, product in products %}
                 <tr>
                     <td>{{ product.name() }}</td>
-                    <td>{{ product.price().formatted() }}</td>
+                    <td>{{ fmt.money(product.price()) }}</td>
                     <td><input type="number" name="items[{{ i }}]" value="0" min="0" max="10" class="form-control" style="width:80px"></td>
                 </tr>
             {% endfor %}
@@ -28,31 +30,32 @@
 
     {% if cart.itemCount() > 0 %}
     <div class="card mt-4">
-        <div class="card-header">Košík ({{ cart.itemCount() }} kusů)</div>
+        {% set n = cart.itemCount() %}
+        <div class="card-header">Košík ({{ n }} {{ n == 1 ? 'kus' : (n < 5 ? 'kusy' : 'kusů') }})</div>
         <ul class="list-group list-group-flush">
             {% for item in cart.summary() %}
             <li class="list-group-item d-flex justify-content-between">
                 <span>{{ item.name }} × {{ item.qty }}</span>
-                <span>{{ item.lineTotal }}</span>
+                <span>{{ fmt.money(item.lineTotal) }}</span>
             </li>
             {% endfor %}
         </ul>
-        <div class="card-footer text-end fw-bold">Celkem: {{ cart.totalAmount().formatted() }}</div>
+        <div class="card-footer text-end fw-bold">Celkem: {{ fmt.money(cart.totalAmount()) }}</div>
     </div>
     {% endif %}
 
     <hr class="my-5">
-    <h2>Bounded Context — stejná věc, jiný model</h2>
-    <p>Produkt <code>prod-42</code> existuje ve dvou kontextech. Každý kontext modeluje jen to, co potřebuje.</p>
+    <h2>Bounded Context: stejná věc, jiný model</h2>
+    <p>Produkt „{{ catalogProduct.name }}“ existuje ve dvou kontextech. Každý kontext modeluje jen to, co potřebuje.</p>
     <div class="row g-4">
         <div class="col-md-6">
             <div class="card h-100">
-                <div class="card-header bg-primary text-white"><strong>CatalogContext\Product</strong></div>
+                <div class="card-header bg-primary text-white"><strong>CatalogProduct</strong> <span class="small">(kontext Katalog)</span></div>
                 <div class="card-body">
-                    <p class="text-muted small mb-2">Zajímá ho co produkt <em>je</em> a zda je skladem.</p>
+                    <p class="text-muted small mb-2">Zajímá ho, co produkt <em>je</em> a zda je skladem.</p>
                     <table class="table table-sm mb-0">
                         <tbody>
-                            <tr><th>id</th><td><code>{{ catalogProduct.id }}</code></td></tr>
+                            <tr><th>id</th><td><code class="small">{{ catalogProduct.id.value }}</code></td></tr>
                             <tr><th>name</th><td>{{ catalogProduct.name }}</td></tr>
                             <tr><th>description</th><td>{{ catalogProduct.description }}</td></tr>
                             <tr><th>stockQty</th><td>{{ catalogProduct.stockQty }} ks</td></tr>
@@ -64,54 +67,52 @@
         </div>
         <div class="col-md-6">
             <div class="card h-100">
-                <div class="card-header bg-success text-white"><strong>OrderContext\Product</strong></div>
+                <div class="card-header bg-success text-white"><strong>OrderProduct</strong> <span class="small">(kontext Objednávky)</span></div>
                 <div class="card-body">
-                    <p class="text-muted small mb-2">Zajímá ho za kolik a s jakou daní se prodal.</p>
+                    <p class="text-muted small mb-2">Zajímá ho, za kolik a s jakou sazbou DPH se prodal.</p>
                     <table class="table table-sm mb-0">
                         <tbody>
-                            <tr><th>productId</th><td><code>{{ orderProduct.productId }}</code></td></tr>
-                            <tr><th>unitPriceCents</th><td>{{ orderProduct.unitPriceCents }}</td></tr>
-                            <tr><th>currency</th><td>{{ orderProduct.currency }}</td></tr>
-                            <tr><th>taxRate</th><td>{{ (orderProduct.taxRate * 100)|number_format(0) }} %</td></tr>
+                            <tr><th>productId</th><td><code class="small">{{ orderProduct.productId.value }}</code></td></tr>
+                            <tr><th>unitPrice</th><td>{{ fmt.money(orderProduct.unitPrice) }} <span class="text-muted small">({{ orderProduct.unitPrice.amountInCents }} haléřů)</span></td></tr>
+                            <tr><th>vatRatePercent</th><td>{{ orderProduct.vatRatePercent }} %</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
-    <p class="text-muted mt-3"><small>Obě třídy nesou stejné <code>productId</code>, ale mají různé atributy — protože slouží různým účelům.</small></p>
+    <p class="text-muted mt-3"><small>Obě třídy nesou stejné <code>ProductId</code>, ale mají různé atributy, protože slouží různým účelům.</small></p>
 
     <hr class="my-5">
     <h2>Anti-Corruption Layer (ACL)</h2>
-    <p>Když Order kontext potřebuje data z Catalog kontextu, nepřistupuje přímo. Používá <strong>translator</strong>, který chrání Order kontext před změnami v Catalog kontextu.</p>
+    <p>Když kontext Objednávky potřebuje data z katalogu, nepřebírá jeho model. Používá <strong>translator</strong>, který ho chrání před změnami v kontextu Katalog.</p>
 
     <div class="card mb-3">
-        <div class="card-header"><strong>CatalogProductTranslator</strong> — ACL v akci</div>
+        <div class="card-header"><strong>CatalogProductTranslator</strong> – ACL v akci</div>
         <div class="card-body">
             <p>Vstup: <code>CatalogProduct</code> → Výstup: <code>OrderProduct</code></p>
             <pre class="bg-light p-2 rounded small">class CatalogProductTranslator {
     public function toOrderProduct(
-        CatalogProduct $catalog, int $price, ...
+        CatalogProduct $catalog, Money $price, int $vatRatePercent,
     ): OrderProduct {
         return new OrderProduct(
             productId: $catalog->id,
-            unitPriceCents: $price, ...
+            unitPrice: $price,
+            vatRatePercent: $vatRatePercent,
         );
     }
 }</pre>
-            {% if translator %}
-            <p class="text-success small">Výsledek překladu: <code>OrderProduct</code> s productId = <code>{{ translatedProduct.productId }}</code>, cena {{ translatedProduct.unitPriceCents }} haléřů, daň {{ (translatedProduct.taxRate * 100)|number_format(0) }} %</p>
-            {% endif %}
-            <p class="text-muted small">Pokud se <code>CatalogProduct</code> změní (přidá nový atribut), stačí upravit translator — <code>OrderProduct</code> a celý Order kontext zůstanou nedotčeny.</p>
+            <p class="text-success small">Výsledek překladu: <code>OrderProduct</code> se stejným <code>ProductId</code>, cena {{ fmt.money(orderProduct.unitPrice) }}, DPH {{ orderProduct.vatRatePercent }} %.</p>
+            <p class="text-muted small">Když se <code>CatalogProduct</code> změní (přibude atribut), upraví se jen translator. <code>OrderProduct</code> a celý kontext Objednávky zůstanou nedotčené.</p>
         </div>
     </div>
 
     <h2>Shared Kernel</h2>
-    <p><code>ProductId</code> je hodnota sdílená mezi kontexty — oba kontexty musí souhlasit s jejím formátem. To je <strong>Shared Kernel</strong> — minimální společný kód.</p>
+    <p><code>ProductId</code> je hodnota sdílená mezi kontexty a oba se musí shodnout na jejím formátu (UUID). Takový společný kus modelu je <strong>Shared Kernel</strong>; každá jeho změna vyžaduje souhlas obou stran.</p>
 
     <hr class="my-5">
-    <h2>Ubiquitous Language — stejný výraz, jiný význam</h2>
-    <p>Jazyk musí být shodný v rámci jednoho kontextu. Mezi kontexty se stejný výraz může lišit.</p>
+    <h2>Ubiquitous Language: stejný výraz, jiný význam</h2>
+    <p>Uvnitř jednoho kontextu má každý termín právě jeden význam. Mezi kontexty se stejný výraz může lišit.</p>
     <table class="table table-bordered">
         <thead class="table-light">
             <tr><th>Výraz</th><th>CatalogContext</th><th>OrderContext</th></tr>

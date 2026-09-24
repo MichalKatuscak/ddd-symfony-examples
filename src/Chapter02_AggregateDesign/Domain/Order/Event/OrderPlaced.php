@@ -9,9 +9,12 @@ use App\Chapter02_AggregateDesign\Domain\Order\OrderId;
 
 final readonly class OrderPlaced
 {
+    public \DateTimeImmutable $occurredAt;
+
     public function __construct(
         public OrderId $orderId,
         public CustomerId $customerId,
-        public \DateTimeImmutable $occurredAt = new \DateTimeImmutable(),
-    ) {}
+    ) {
+        $this->occurredAt = new \DateTimeImmutable();
+    }
 }

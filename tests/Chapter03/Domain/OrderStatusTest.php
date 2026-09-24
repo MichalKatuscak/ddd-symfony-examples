@@ -9,36 +9,16 @@ use PHPUnit\Framework\TestCase;
 
 final class OrderStatusTest extends TestCase
 {
-    public function test_has_draft_case(): void
+    public function test_has_the_canonical_states(): void
     {
-        $this->assertSame('draft', OrderStatus::Draft->value);
+        self::assertSame(
+            ['draft', 'confirmed', 'paid', 'shipped', 'delivered', 'cancelled'],
+            array_map(static fn (OrderStatus $s): string => $s->value, OrderStatus::cases()),
+        );
     }
 
-    public function test_has_confirmed_case(): void
+    public function test_from_string_works(): void
     {
-        $this->assertSame('confirmed', OrderStatus::Confirmed->value);
-    }
-
-    public function test_has_cancelled_case(): void
-    {
-        $this->assertSame('cancelled', OrderStatus::Cancelled->value);
-    }
-
-    public function test_from_draft_string_works(): void
-    {
-        $status = OrderStatus::from('draft');
-        $this->assertSame(OrderStatus::Draft, $status);
-    }
-
-    public function test_from_confirmed_string_works(): void
-    {
-        $status = OrderStatus::from('confirmed');
-        $this->assertSame(OrderStatus::Confirmed, $status);
-    }
-
-    public function test_from_cancelled_string_works(): void
-    {
-        $status = OrderStatus::from('cancelled');
-        $this->assertSame(OrderStatus::Cancelled, $status);
+        self::assertSame(OrderStatus::Confirmed, OrderStatus::from('confirmed'));
     }
 }

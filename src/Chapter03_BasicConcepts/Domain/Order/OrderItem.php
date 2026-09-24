@@ -4,13 +4,20 @@ declare(strict_types=1);
 
 namespace App\Chapter03_BasicConcepts\Domain\Order;
 
-final readonly class OrderItem
+use App\Shared\Domain\Money;
+
+// Záměrně zjednodušený neměnný záznam bez odkazu zpět na objednávku;
+// identitu mu uvnitř agregátu stačí dát produkt. Plnou verzi
+// s increaseQuantity() ukazuje Chapter02_AggregateDesign.
+class OrderItem
 {
     public function __construct(
-        public ProductId $productId,
-        public int $quantity,
-        public Money $unitPrice,
-    ) {}
-
-    public function lineTotal(): Money { return $this->unitPrice->multiply($this->quantity); }
+        public readonly ProductId $productId,
+        public readonly int $quantity,
+        public readonly Money $unitPrice,
+    ) {
+        if ($quantity <= 0) {
+            throw new \InvalidArgumentException('Množství musí být kladné.');
+        }
+    }
 }

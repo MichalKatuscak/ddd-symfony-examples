@@ -7,37 +7,38 @@
         <a href="https://ddd-v-symfony.katuscak.cz/outbox-pattern"><strong>Outbox Pattern</strong></a>
     </div>
     <nav class="mb-3"><a href="{{ path('examples_index') }}">← Zpět na přehled</a></nav>
-    <h1>Ukázka: Transactional Outbox + Idempotent Inbox</h1>
+    <h1>Ukázka: Transactional Outbox a Idempotent Inbox</h1>
     <p>
-        <code>Order</code> agregát a <em>outbox</em> řádek vznikají v jedné transakci. Samostatný
-        relay (worker) publikuje pending zprávy subscriberům. Subscriber drží <em>inbox</em> —
-        seznam již zpracovaných eventů — a duplicitní doručení tichého ignoruje.
+        <code>Order::placeWithItems()</code> nahraje <code>OrderPlaced</code>, <code>OrderItemAdded</code>
+        a <code>OrderConfirmed</code>. Handler z nich do outboxu zapíše jedinou integrační událost
+        <code>OrderPlacedIntegrationEvent</code> s vlastním <code>eventId</code>. Relay pak pending řádky
+        publikuje a subscriber si v inboxu eviduje, co už zpracoval.
     </p>
     <p class="text-muted small">
-        Ukázka běží v rámci jednoho HTTP requestu — in-memory repozitáře nepřežijí mezi
-        requesty. Formulářem vybereš scénář, controller pak složí postupné snímky stavu.
+        Ukázka běží v jednom HTTP requestu nad úložišti v paměti. Formulářem zvolíte scénář,
+        controller po každém kroku zachytí snímek stavu.
     </p>
 
     <form method="post" data-turbo="false" class="card p-3 mb-4">
         <div class="row g-3">
-            <div class="col-md-3">
-                <label class="form-label">Zákazník</label>
-                <input type="text" name="customer" value="student-1" class="form-control">
+            <div class="col-md-2">
+                <label class="form-label" for="quantity">Kusů</label>
+                <input type="number" name="quantity" id="quantity" value="2" min="1" class="form-control">
             </div>
-            <div class="col-md-3">
-                <label class="form-label">Částka (CZK)</label>
-                <input type="number" name="amount" value="1500" min="1" class="form-control">
+            <div class="col-md-2">
+                <label class="form-label" for="price">Cena za kus (Kč)</label>
+                <input type="number" name="price" id="price" value="750" min="0" class="form-control">
             </div>
-            <div class="col-md-3 d-flex align-items-end">
+            <div class="col-md-4 d-flex align-items-end">
                 <div class="form-check">
-                    <input type="checkbox" name="run_relay" value="1" id="run_relay" class="form-check-input" checked>
-                    <label for="run_relay" class="form-check-label">Spustit relay</label>
+                    <input type="checkbox" name="broker_down" value="1" id="broker_down" class="form-check-input">
+                    <label for="broker_down" class="form-check-label">Broker je při prvním průchodu relaye nedostupný</label>
                 </div>
             </div>
-            <div class="col-md-3 d-flex align-items-end">
+            <div class="col-md-4 d-flex align-items-end">
                 <div class="form-check">
                     <input type="checkbox" name="redeliver" value="1" id="redeliver" class="form-check-input">
-                    <label for="redeliver" class="form-check-label">Simulovat duplicitní doručení</label>
+                    <label for="redeliver" class="form-check-label">Relay spadne před <code>markSent</code> (opakované doručení)</label>
                 </div>
             </div>
         </div>
@@ -60,19 +61,22 @@
     {% for stage in stages %}
         <h3 class="mt-4">{{ loop.index }}. {{ stage.label }}</h3>
         <div class="row g-3">
-            <div class="col-md-6">
+            <div class="col-12">
                 <h5>Outbox</h5>
                 {% if stage.outbox is empty %}
-                    <p class="text-muted small">prázdné</p>
+                    <p class="text-muted small">prázdný</p>
                 {% else %}
                     <table class="table table-sm">
-                        <thead><tr><th>Type</th><th>Status</th><th>Attempts</th></tr></thead>
+                        <thead><tr><th>message_type</th><th>aggregate_id</th><th>status</th><th>attempts</th><th>available_at</th><th>last_error</th></tr></thead>
                         <tbody>
                         {% for m in stage.outbox %}
                             <tr class="{{ m.status == 'pending' ? 'table-warning' : '' }}{{ m.status == 'sent' ? 'table-success' : '' }}{{ m.status == 'failed' ? 'table-danger' : '' }}">
-                                <td><code>{{ m.type|split('\\\\')|last }}</code></td>
+                                <td><code>{{ m.messageType|split('\\')|last }}</code></td>
+                                <td><code>{{ m.aggregateId|slice(0, 8) }}…</code></td>
                                 <td><span class="badge bg-secondary">{{ m.status }}</span></td>
                                 <td>{{ m.attempts }}</td>
+                                <td>{{ m.availableAt }}</td>
+                                <td class="small">{{ m.lastError ?? '–' }}</td>
                             </tr>
                         {% endfor %}
                         </tbody>
@@ -81,17 +85,17 @@
             </div>
 
             <div class="col-md-6">
-                <h5>Inbox (consumer: orders.read_model)</h5>
+                <h5>Inbox (consumer: <code>{{ consumer }}</code>)</h5>
                 {% if stage.inbox is empty %}
-                    <p class="text-muted small">prázdné</p>
+                    <p class="text-muted small">prázdný</p>
                 {% else %}
                     <table class="table table-sm">
-                        <thead><tr><th>Event ID</th><th>Processed at</th></tr></thead>
+                        <thead><tr><th>event_id</th><th>processed_at</th></tr></thead>
                         <tbody>
                         {% for p in stage.inbox %}
                             <tr>
                                 <td><code>{{ p.eventId|slice(0, 8) }}…</code></td>
-                                <td>{{ p.processedAt|date('H:i:s') }}</td>
+                                <td>{{ p.processedAt }}</td>
                             </tr>
                         {% endfor %}
                         </tbody>
@@ -99,25 +103,24 @@
                 {% endif %}
             </div>
 
-            <div class="col-12">
-                <h5>Read model</h5>
-                {% if stage.read_model is empty %}
-                    <p class="text-muted small">prázdné</p>
+            <div class="col-md-6">
+                <h5>Read model (reporting)</h5>
+                {% if stage.readModel is empty %}
+                    <p class="text-muted small">prázdný</p>
                 {% else %}
                     <table class="table table-sm">
-                        <thead><tr><th>Order</th><th>Customer</th><th>Amount</th><th>Updates applied</th></tr></thead>
+                        <thead><tr><th>Objednávka</th><th>Položek</th><th>Zápisů</th></tr></thead>
                         <tbody>
-                        {% for r in stage.read_model %}
+                        {% for r in stage.readModel %}
                             <tr>
                                 <td><code>{{ r.orderId|slice(0, 8) }}…</code></td>
-                                <td>{{ r.customerId }}</td>
-                                <td>{{ r.amount }} Kč</td>
+                                <td>{{ r.items }}</td>
                                 <td>
-                                    {{ r.updatesApplied }}
-                                    {% if r.updatesApplied > 1 %}
-                                        <span class="badge bg-danger">není idempotentní!</span>
+                                    {{ r.writes }}
+                                    {% if r.writes > 1 %}
+                                        <span class="badge bg-danger">duplicitní efekt</span>
                                     {% else %}
-                                        <span class="badge bg-success">idempotent</span>
+                                        <span class="badge bg-success">právě jednou</span>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -130,34 +133,29 @@
         <hr>
     {% endfor %}
 
-    <h2 class="mt-5">Jak to funguje?</h2>
+    <h2 class="mt-5">Jak to funguje</h2>
     <ol>
-        <li><strong>Place Order</strong> uloží <code>Order</code> agregát a v <em>jedné transakci</em>
-            zapíše doménovou událost <code>OrderPlaced</code> jako řádek do <em>outbox</em> tabulky.</li>
-        <li><strong>Relay</strong> (worker / cron) v samostatném procesu načte pending řádky a
-            publikuje je subscriberům. Po úspěšném acku označí řádek jako <code>sent</code>.</li>
-        <li><strong>Subscriber</strong> nejprve zkontroluje <em>inbox</em>: pokud event už zpracoval,
-            tichého zahodí. Jinak udělá svou práci a zapíše <code>(consumer, eventId)</code> do inboxu.</li>
+        <li><strong>PlaceOrderHandler</strong> uloží objednávku a do outboxu zapíše integrační událost.
+            V knize obojí obaluje <code>wrapInTransaction()</code>; broker se z handleru nevolá.</li>
+        <li><strong>Relay</strong> vybere pending řádky, kterým uplynul odklad, publikuje je a označí
+            jako <code>sent</code>. Když broker zprávu nepřijme, <code>markFailed()</code> nechá řádek
+            <code>pending</code>, zvýší <code>attempts</code> a posune <code>available_at</code>.
+            Do <code>failed</code> řádek propadne až po pátém pokusu.</li>
+        <li><strong>Subscriber</strong> se nejdřív zeptá inboxu. Zpracovanou událost zahodí, jinak
+            provede upsert read modelu a zapíše <code>(event_id, consumer)</code> do inboxu.
+            Duplicitní zápis inbox odmítne výjimkou, nikdy ho tiše nepřepíše.</li>
     </ol>
 
-    <pre class="bg-light p-3 rounded"><code>// PlaceOrderHandler — transakční zápis Order + Outbox
-$em-&gt;wrapInTransaction(function () use ($order, $outbox): void {
-    $em-&gt;persist($order);
-    foreach ($order-&gt;pullEvents() as $event) {
-        $outbox-&gt;save(OutboxMessage::fromEvent($event));
-    }
-});
-
-// OrderPlacedReadModelUpdater — idempotent
-if ($this-&gt;inbox-&gt;isProcessed($consumer, $event-&gt;eventId)) {
-    return; // duplicate — ack &amp; skip
+    <pre class="bg-light p-3 rounded"><code>// OrderPlacedReadModelUpdater
+if ($this-&gt;inbox-&gt;isProcessed($event-&gt;eventId, self::CONSUMER)) {
+    return; // duplikát – ack bez vedlejšího efektu
 }
-$this-&gt;readModel-&gt;recordOrderPlaced(...);
-$this-&gt;inbox-&gt;markProcessed(new ProcessedEventId($consumer, $event-&gt;eventId));</code></pre>
+$this-&gt;readModel-&gt;upsertOrderRow(...);
+$this-&gt;inbox-&gt;markProcessed($event-&gt;eventId, self::CONSUMER); // UNIQUE je pojistka</code></pre>
 
     <p class="text-muted small">
-        Konzolový worker spustíš příkazem
-        <code>php bin/console app:outbox:dispatch</code>.
+        Tvar relaye jako trvale běžícího procesu ukazuje příkaz
+        <code>php bin/console app:outbox:dispatch --time-limit=1</code>.
     </p>
 
     <nav class="d-flex justify-content-between mt-5 pt-3 border-top">

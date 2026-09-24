@@ -1,18 +1,56 @@
-# Kapitola 12: Méně známé taktické vzory
+# Kapitola 8: Méně známé taktické vzory
 
-Tato ukázka demonstruje čtyři často přehlížené taktické vzory DDD: Specification Pattern, Domain Services, Factories a Modules.
+Ukázka ke kapitole [Méně známé taktické vzory](https://ddd-v-symfony.katuscak.cz/mene-zname-vzory):
+Specification, Domain Service, Factory a Module.
 
 ## Spuštění
 
-Otevři [http://localhost:8000/examples/mene-zname-vzory](http://localhost:8000/examples/mene-zname-vzory)
+Stránka: [http://localhost:8000/examples/mene-zname-vzory](http://localhost:8000/examples/mene-zname-vzory)
 
-## Co se naučíš
+Testy: `./vendor/bin/phpunit tests/Chapter12`
 
-- Specification Pattern — kompozice booleovských pravidel pomocí `and()`, `or()`, `not()` místo zamotaných `if`-ů
-- Domain Service — kde umístit logiku, která nemá přirozeného vlastníka mezi entitami (klasický `MoneyTransferService` mezi dvěma účty)
-- Factory — kdy stačí static method (named constructor `Order::place()`) a kdy je potřeba samostatná Factory class s DI závislostmi
-- Modules — organizace kódu podle ubiquitous language (`Domain/`, `Application/`, `Infrastructure/`, `UI/`) místo technického `Entity/`, `Service/`, `Repository/`
+## Co ukázka obsahuje
+
+- **Specification** ([08.02](https://ddd-v-symfony.katuscak.cz/mene-zname-vzory#specification)):
+  rozhraní `Specification` a kompozit s `and()`, `or()`, `not()` v `SharedKernel`,
+  doménová pravidla `EligibleForFreeShipping`, `InEUCountry` a `NotInBlacklist`
+  (blacklist zákazníků, ne zemí) a jejich kompozice ve `FreeShippingPolicy`
+  ([Kompozice v aplikační vrstvě](https://ddd-v-symfony.katuscak.cz/mene-zname-vzory#spec-compose)).
+  Politika vrací `bool` a agregát nemění.
+- **Domain Service** ([Příklad: MoneyTransferService](https://ddd-v-symfony.katuscak.cz/mene-zname-vzory#ds-priklad)):
+  převod mezi dvěma účty kontextu `Banking` se signaturou z knihy (`TransferReference`,
+  čas převodu). Služba nic neukládá; oba účty uloží volající. Druhou doménovou
+  službou je `PricingService`, která cenu položky počítá z ceníku a cenové skupiny
+  zákazníka.
+- **Factory** ([08.04](https://ddd-v-symfony.katuscak.cz/mene-zname-vzory#factories)):
+  pojmenované továrny `Order::placePhysical()` a polymorfní `Order::placeDigital()`,
+  `Order::reconstitute()` bez události a třída `OrderFromCartFactory`, které container
+  dodá repozitář košíků, `PricingService` a hodiny. Invariant „aspoň jedna položka“
+  zůstává v agregátu.
+- **Module** ([Modul jako Bounded Context](https://ddd-v-symfony.katuscak.cz/mene-zname-vzory#mod-bc)):
+  nejvyšší úroveň adresářů tvoří kontexty `Ordering` a `Banking` a sdílené
+  `SharedKernel`; technické složky jsou až uvnitř.
+
+## V čem se ukázka od knihy liší
+
+- **`placePhysical()` má čtvrtý parametr `ShippingAddress`.** Specifikace v knize čtou
+  `$order->shippingAddress`, ale továrna adresu nepřebírá. Ukázka ji předává
+  a `OrderFromCartFactory` ji bere z košíku. Digitální objednávka adresu nemá,
+  proto `InEUCountry` čte zemi přes `?->` a vrátí `false`.
+- **Vynechané části.** `Order::fromImport()` stojí na třídách, které kniha
+  nedefinuje (`ImportedOrderRow`, `CustomerLookup`), proto v ukázce není.
+  Double-dispatch do Doctrine (`QuerySpecification`, `Criteria`) a zbytková
+  specifikace (`remainderUnsatisfiedBy()`) chybí také: ukázka běží bez databáze.
+- **Doplněné třídy.** Kniha nerozepisuje `Account`, `Cart` ani `PricingService`.
+  Ukázka jim dává jen to, co služby a factory volají; ceník a blacklist dodávají
+  porty `PriceList` a `BlacklistRegistry` s in-memory adaptéry.
+- **Úložiště v paměti.** Repozitáře drží stav jen po dobu požadavku. Stránka skládá
+  kroky, které by v aplikaci dělal command handler (checkout, převod); kniha
+  je nerozepisuje.
+- **Jmenné prostory.** Kniha používá `App\Ordering\…`, `App\Banking\…`
+  a `App\SharedKernel\…`, ukázka `App\Chapter12_LesserPatterns\…`; `Money`
+  a `Currency` bere ze sdíleného `App\Shared\Domain`.
 
 ## Odkaz na příručku
 
-[Méně známé taktické vzory v Symfony](https://ddd-v-symfony.katuscak.cz/mene-zname-vzory)
+[Méně známé taktické vzory](https://ddd-v-symfony.katuscak.cz/mene-zname-vzory)

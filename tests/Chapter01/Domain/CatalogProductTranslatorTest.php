@@ -6,42 +6,28 @@ namespace App\Tests\Chapter01\Domain;
 
 use App\Chapter01_WhatIsDDD\Domain\BoundedContext\CatalogProduct;
 use App\Chapter01_WhatIsDDD\Domain\ContextMap\CatalogProductTranslator;
+use App\Chapter01_WhatIsDDD\Domain\SharedKernel\ProductId;
+use App\Shared\Domain\Currency;
+use App\Shared\Domain\Money;
 use PHPUnit\Framework\TestCase;
 
 final class CatalogProductTranslatorTest extends TestCase
 {
-    public function test_to_order_product_correctly_translates_catalog_product(): void
+    public function test_translates_catalog_product_to_order_product(): void
     {
         $catalogProduct = new CatalogProduct(
-            id: 'prod-42',
+            id: ProductId::generate(),
             name: 'Symfony kniha',
             description: 'Kniha o DDD v Symfony',
             stockQty: 10,
             weightKg: 0.5,
         );
+        $price = new Money(59_900, Currency::CZK);
 
-        $translator = new CatalogProductTranslator();
-        $orderProduct = $translator->toOrderProduct($catalogProduct, 59900, 'CZK', 0.21);
+        $orderProduct = (new CatalogProductTranslator())->toOrderProduct($catalogProduct, $price, 21);
 
-        $this->assertSame('prod-42', $orderProduct->productId);
-        $this->assertSame(59900, $orderProduct->unitPriceCents);
-        $this->assertSame('CZK', $orderProduct->currency);
-        $this->assertSame(0.21, $orderProduct->taxRate);
-    }
-
-    public function test_translated_order_product_uses_catalog_product_id(): void
-    {
-        $catalogProduct = new CatalogProduct(
-            id: 'unique-product-id-999',
-            name: 'Test produkt',
-            description: 'Popis',
-            stockQty: 1,
-            weightKg: 0.1,
-        );
-
-        $translator = new CatalogProductTranslator();
-        $orderProduct = $translator->toOrderProduct($catalogProduct, 10000, 'EUR', 0.19);
-
-        $this->assertSame($catalogProduct->id, $orderProduct->productId);
+        self::assertTrue($orderProduct->productId->equals($catalogProduct->id));
+        self::assertTrue($orderProduct->unitPrice->equals($price));
+        self::assertSame(21, $orderProduct->vatRatePercent);
     }
 }

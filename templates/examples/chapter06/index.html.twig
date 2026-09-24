@@ -8,65 +8,94 @@
     </div>
     <nav class="mb-3"><a href="{{ path('examples_index') }}">← Zpět na přehled</a></nav>
     <h1>Ukázka: Event Sourcing</h1>
-    <p>Stav objednávky není uložen jako řádek v DB — je <strong>rekonstruován z event logu</strong>.</p>
+    <p>Stav objednávky se neukládá jako řádek. Repozitář načte event stream přes
+       <code>loadStream()</code> a agregát ho přehraje metodami <code>apply*()</code>.</p>
 
     {% if result %}<div class="alert alert-success">{{ result }}</div>{% endif %}
+    {% if error %}<div class="alert alert-warning">{{ error }}</div>{% endif %}
 
     <div class="row g-4">
         <div class="col-md-5">
             <h3>Akce</h3>
-            <form method="post" data-turbo="false" class="mb-3">
+            <form method="post" data-turbo="false" class="card p-3 mb-3">
                 <input type="hidden" name="action" value="place">
-                <div class="mb-2"><input type="number" name="price" value="599" class="form-control" placeholder="Cena (CZK)"></div>
-                <button class="btn btn-primary w-100">1. Zadat objednávku (OrderPlaced)</button>
+                <div class="row g-2 mb-2">
+                    <div class="col"><label class="form-label small" for="place_qty">Kusů</label><input type="number" id="place_qty" name="quantity" value="1" min="1" class="form-control"></div>
+                    <div class="col"><label class="form-label small" for="place_price">Cena za kus (Kč)</label><input type="number" id="place_price" name="price" value="599" min="0" class="form-control"></div>
+                </div>
+                <button class="btn btn-primary w-100">Nová objednávka s položkou</button>
             </form>
-            <p class="text-muted small">Po zadání zkopíruj ID z výsledku a vlož níže:</p>
-            <form method="post" data-turbo="false" class="mb-2">
-                <input type="hidden" name="action" value="confirm">
-                <div class="mb-2"><input type="text" name="order_id" value="{{ currentOrderId }}" class="form-control" placeholder="Order ID"></div>
-                <button class="btn btn-success w-100">2. Potvrdit (OrderConfirmed)</button>
-            </form>
-            <form method="post" data-turbo="false">
-                <input type="hidden" name="action" value="cancel">
-                <div class="mb-2"><input type="text" name="order_id" value="{{ currentOrderId }}" class="form-control" placeholder="Order ID"></div>
-                <button class="btn btn-warning w-100">3. Zrušit (OrderCancelled)</button>
-            </form>
-        </div>
-        <div class="col-md-7">
-            <h3>Event Log (EventStore)</h3>
-            {% if history is empty %}
-                <p class="text-muted">Zadej objednávku pro zobrazení event logu.</p>
-            {% else %}
-                <ol>
-                {% for event in history %}
-                    <li><code>{{ event|class_name }}</code> @ {{ event.occurredAt()|date('H:i:s') }}</li>
+
+            {% if orderId %}
+                <p class="small text-muted">Pracujete s objednávkou <code>{{ orderId|slice(0, 8) }}…</code></p>
+                <form method="post" data-turbo="false" class="card p-3 mb-2">
+                    <input type="hidden" name="action" value="add_item">
+                    <input type="hidden" name="order_id" value="{{ orderId }}">
+                    <div class="row g-2 mb-2">
+                        <div class="col"><input type="number" name="quantity" value="2" min="1" class="form-control" aria-label="Kusů"></div>
+                        <div class="col"><input type="number" name="price" value="150" min="0" class="form-control" aria-label="Cena za kus"></div>
+                    </div>
+                    <button class="btn btn-outline-primary w-100">Přidat položku (OrderItemAdded)</button>
+                </form>
+                {% for action, label in {
+                    'confirm': 'Potvrdit (OrderConfirmed)',
+                    'ship': 'Odeslat (OrderShipped)',
+                    'conflict': 'Dva souběžné zápisy do téže verze'
+                } %}
+                    <form method="post" data-turbo="false" class="mb-2">
+                        <input type="hidden" name="action" value="{{ action }}">
+                        <input type="hidden" name="order_id" value="{{ orderId }}">
+                        <button class="btn {{ action == 'conflict' ? 'btn-outline-danger' : 'btn-outline-secondary' }} w-100">{{ label }}</button>
+                    </form>
                 {% endfor %}
-                </ol>
+            {% endif %}
+        </div>
+
+        <div class="col-md-7">
+            <h3>Event stream</h3>
+            {% if stream is empty %}
+                <p class="text-muted">Založte objednávku a zobrazí se její události.</p>
+            {% else %}
+                <p>Stav po přehrání: <span class="badge bg-secondary">{{ order.status.value }}</span>,
+                   verze streamu {{ order.version }}.</p>
+                <table class="table table-sm">
+                    <thead><tr><th>version</th><th>event_type</th><th>occurred_on</th></tr></thead>
+                    <tbody>
+                    {% for envelope in stream %}
+                        <tr>
+                            <td>{{ envelope.version }}</td>
+                            <td><code>{{ envelope.eventType }}</code></td>
+                            <td class="small">{{ envelope.occurredOn }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             {% endif %}
         </div>
     </div>
 
     <hr class="my-5">
-    <h2>Projekce (Read Model)</h2>
-    <p>Projekce je denormalizovaná tabulka aktualizovaná z event streamu. Nevyžaduje rekonstrukci agregátu pro čtení.</p>
-    {% if projections is defined and projections is not empty %}
+    <h2>Projekce <code>ch06_order_summary</code></h2>
+    <p>Read model postavený z událostí. Pro čtení nepotřebuje přehrávat agregát.</p>
+    {% if summaries is not empty %}
         <table class="table table-sm">
-            <thead><tr><th>Order ID</th><th>Zákazník</th><th>Celkem</th><th>Stav</th><th>Vytvořeno</th></tr></thead>
+            <thead><tr><th>Objednávka</th><th>Stav</th><th>Položek</th><th>Celkem</th><th>Zásilka</th></tr></thead>
             <tbody>
-            {% for p in projections %}
+            {% for s in summaries %}
                 <tr>
-                    <td><code>{{ p.orderId()|slice(0,8) }}…</code></td>
-                    <td>{{ p.customerId() }}</td>
-                    <td>{{ (p.totalAmount() / 100)|number_format(2) }} CZK</td>
-                    <td><span class="badge {{ p.status() == 'confirmed' ? 'bg-success' : (p.status() == 'cancelled' ? 'bg-danger' : 'bg-secondary') }}">{{ p.status() }}</span></td>
-                    <td>{{ p.createdAt()|date('H:i:s') }}</td>
+                    <td><code>{{ s.order_id|slice(0, 8) }}…</code></td>
+                    <td><span class="badge bg-secondary">{{ s.status }}</span></td>
+                    <td>{{ s.item_count }}</td>
+                    <td>{{ (s.total_amount / 100)|number_format(2, ',', ' ') }} Kč</td>
+                    <td>{{ s.tracking_no ?? '–' }}</td>
                 </tr>
             {% endfor %}
             </tbody>
         </table>
     {% else %}
-        <p class="text-muted">Zatím žádné projekce. Zadej objednávku výše.</p>
+        <p class="text-muted">Zatím žádné objednávky.</p>
     {% endif %}
+
     <nav class="d-flex justify-content-between mt-5 pt-3 border-top">
         {% if prev_route is defined and prev_route %}
             <a href="{{ path(prev_route) }}">← {{ prev_title }}</a>

@@ -3,21 +3,32 @@
 {% block body %}
 <div class="container mt-4">
     <h1>Živé ukázky DDD v Symfony</h1>
-    <p class="lead">Ke každé kapitole příručky <a href="https://ddd-v-symfony.katuscak.cz">ddd-v-symfony.katuscak.cz</a> patří spustitelná ukázka kódu.</p>
+    <p class="lead">Spustitelný kód ke kapitolám příručky <a href="{{ book_url }}">DDD v Symfony</a>.
+        Čísla odpovídají kapitolám příručky, pořadí také.</p>
+    <p class="text-muted">Kapitoly, které tu chybějí, ukázku nemají záměrně: stojí na rozhodnutích
+        a diagramech, nebo ukazují variantu modelu, který už předvádí některá ukázka níže.</p>
 
     <div class="row g-4 mt-2">
         {% for chapter in chapters %}
         <div class="col-md-6 col-lg-4">
             <div class="card h-100">
                 <div class="card-body">
-                    <h5 class="card-title">
+                    <h2 class="card-title h5">
                         <span class="badge bg-primary me-2">{{ chapter.num }}</span>
                         {{ chapter.title }}
-                    </h5>
+                    </h2>
                     <p class="card-text text-muted">{{ chapter.desc }}</p>
+                    <p class="card-text small mb-0">
+                        <a href="{{ book_url ~ chapter.book_path }}">Kapitola v příručce</a>
+                        · <code>src/{{ chapter.dir }}</code>
+                    </p>
                 </div>
                 <div class="card-footer">
-                    <a href="{{ path(chapter.route) }}" class="btn btn-primary btn-sm">Spustit ukázku</a>
+                    {% if chapter.route %}
+                        <a href="{{ path(chapter.route) }}" class="btn btn-primary btn-sm">Spustit ukázku</a>
+                    {% else %}
+                        <span class="small text-muted">Jen testy: <code>./vendor/bin/phpunit {{ chapter.tests }}</code></span>
+                    {% endif %}
                 </div>
             </div>
         </div>

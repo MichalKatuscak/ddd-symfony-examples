@@ -13,6 +13,6 @@ final readonly class OrderCancelled
         public OrderId $orderId,
         public CustomerId $customerId,
         public string $reason,
-        public \DateTimeImmutable $occurredAt = new \DateTimeImmutable(),
+        public \DateTimeImmutable $occurredAt,
     ) {}
 }

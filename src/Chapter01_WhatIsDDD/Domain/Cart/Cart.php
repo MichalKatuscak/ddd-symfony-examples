@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Chapter01_WhatIsDDD\Domain\Cart;
 
-use App\Chapter01_WhatIsDDD\Domain\Product\Price;
 use App\Chapter01_WhatIsDDD\Domain\Product\Product;
+use App\Shared\Domain\Currency;
+use App\Shared\Domain\Money;
 
+/** Doménová logika košíku bez frameworku a databáze. */
 final class Cart
 {
     /** @var array<string, array{product: Product, qty: int}> */
@@ -37,24 +39,26 @@ final class Cart
         return array_sum(array_column($this->items, 'qty'));
     }
 
-    public function totalAmount(): Price
+    // Prázdný košík má nulovou hodnotu – na rozdíl od objednávky, která
+    // bez položek součet nemá (viz Chapter03_BasicConcepts).
+    public function totalAmount(): Money
     {
-        $total = null;
+        $total = Money::zero(Currency::CZK);
         foreach ($this->items as ['product' => $product, 'qty' => $qty]) {
-            $lineTotal = $product->price()->multiply($qty);
-            $total = $total === null ? $lineTotal : $total->add($lineTotal);
+            $total = $total->add($product->price()->multiply($qty));
         }
-        return $total ?? new Price(0, 'CZK');
+
+        return $total;
     }
 
-    /** @return array<array{name: string, qty: int, lineTotal: string}> */
+    /** @return list<array{name: string, qty: int, lineTotal: Money}> */
     public function summary(): array
     {
         return array_values(array_map(
-            fn($item) => [
+            static fn (array $item): array => [
                 'name' => $item['product']->name(),
                 'qty' => $item['qty'],
-                'lineTotal' => $item['product']->price()->multiply($item['qty'])->formatted(),
+                'lineTotal' => $item['product']->price()->multiply($item['qty']),
             ],
             $this->items,
         ));

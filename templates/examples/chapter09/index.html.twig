@@ -7,7 +7,7 @@
         <a href="https://ddd-v-symfony.katuscak.cz/migrace-z-crud"><strong>Migrace z CRUD architektury na DDD</strong></a>
     </div>
     <nav class="mb-3"><a href="{{ path('examples_index') }}">← Zpět na přehled</a></nav>
-    <h1>Ukázka: CRUD vs DDD — porovnání</h1>
+    <h1>Ukázka: User před migrací a po ní</h1>
 
     {% if dddResult %}<div class="alert alert-success">{{ dddResult }}</div>{% endif %}
     {% if dddError %}<div class="alert alert-danger">{{ dddError }}</div>{% endif %}
@@ -16,41 +16,62 @@
     <div class="row g-4">
         <div class="col-md-6">
             <div class="card h-100 border-danger">
-                <div class="card-header bg-danger text-white"><strong>CRUD přístup (problém)</strong></div>
+                <div class="card-header bg-danger text-white"><strong>Před: anemická CRUD entita</strong></div>
                 <div class="card-body">
-                    <pre class="bg-light p-3 rounded small"><code>// Kdokoliv může nastavit libovolný stav:
-$task->setStatus('done');
-// Žádná validace přechodů!
-// Nebo dokonce neplatnou hodnotu:
-$task->setStatus('banana');
-// Logika je v controlleru, ne v objektu.</code></pre>
+                    <pre class="bg-light p-3 rounded small"><code>$user = new User();
+$user->setEmail($email);
+$user->setStatus('pending_verification');
+// Stav je řetězec, přechody nehlídá nikdo:
+$user->setStatus('aktivni');</code></pre>
                     <form method="post" data-turbo="false" class="mb-2">
-                        <input type="hidden" name="action" value="crud_skip">
-                        <button class="btn btn-warning w-100">setStatus('done') bez start() — projde!</button>
+                        <input type="hidden" name="action" value="crud_status">
+                        <button class="btn btn-warning w-100">setStatus('aktivni') – projde</button>
                     </form>
                     <form method="post" data-turbo="false">
-                        <input type="hidden" name="action" value="crud_invalid">
-                        <button class="btn btn-danger w-100">setStatus('banana') — žádná validace!</button>
+                        <input type="hidden" name="action" value="crud_activate_twice">
+                        <button class="btn btn-warning w-100">Aktivace dvakrát – projde</button>
                     </form>
                 </div>
             </div>
         </div>
         <div class="col-md-6">
             <div class="card h-100 border-success">
-                <div class="card-header bg-success text-white"><strong>DDD přístup (řešení)</strong></div>
+                <div class="card-header bg-success text-white"><strong>Po: doménový agregát User</strong></div>
                 <div class="card-body">
-                    <pre class="bg-light p-3 rounded small"><code>// Doménový model chrání své invarianty:
-$task->start('member-1');   // todo → in_progress
-$task->complete();          // in_progress → done
-// Přeskočení start() vyvolá DomainException.
-// Neplatný stav není ani možný (PHP enum).</code></pre>
+                    <pre class="bg-light p-3 rounded small"><code>$user = User::register(
+    UserId::generate(), new UserName($name),
+    Email::fromUserInput($email),
+    HashedPassword::fromPlainText($password),
+);
+$user->activate($token); // PendingVerification → Active</code></pre>
                     <form method="post" data-turbo="false" class="mb-2">
-                        <input type="hidden" name="action" value="ddd_valid">
-                        <button class="btn btn-success w-100">start() → complete() — správný přechod ✓</button>
+                        <input type="hidden" name="action" value="ddd_register">
+                        <button class="btn btn-success w-100">User::register() – stav a události</button>
+                    </form>
+                    <form method="post" data-turbo="false" class="mb-2">
+                        <input type="hidden" name="action" value="ddd_forbidden">
+                        <button class="btn btn-outline-danger w-100">E-mail z mailinator.com → ForbiddenEmailDomainException</button>
                     </form>
                     <form method="post" data-turbo="false">
-                        <input type="hidden" name="action" value="ddd_invalid">
-                        <button class="btn btn-outline-danger w-100">complete() bez start() → DomainException</button>
+                        <input type="hidden" name="action" value="ddd_activate_twice">
+                        <button class="btn btn-outline-danger w-100">Aktivace dvakrát → UserAlreadyActivatedException</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <div class="card border-secondary">
+                <div class="card-header"><strong>Anti-Corruption Layer: legacy řádek → agregát</strong></div>
+                <div class="card-body">
+                    <p class="mb-2"><code>LegacyUserTranslator</code> překládá stav vyjmenovaně a agregát rekonstituuje –
+                        datum registrace i token zůstávají z legacy řádku a žádná událost nevzniká.</p>
+                    <form method="post" data-turbo="false" class="d-inline">
+                        <input type="hidden" name="action" value="acl_translate">
+                        <button class="btn btn-secondary">Stav „banned“ → Blocked</button>
+                    </form>
+                    <form method="post" data-turbo="false" class="d-inline">
+                        <input type="hidden" name="action" value="acl_unknown">
+                        <button class="btn btn-outline-secondary">Neznámý stav → UnmappableLegacyStatusException</button>
                     </form>
                 </div>
             </div>
