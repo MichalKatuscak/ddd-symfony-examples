@@ -22,7 +22,7 @@ final readonly class UserName
 
         if ($length < self::MIN_LENGTH || $length > self::MAX_LENGTH) {
             throw new \InvalidArgumentException(sprintf(
-                'Jméno musí mít %d–%d znaků (zadáno %d).',
+                'Name must be %d to %d characters long, got %d.',
                 self::MIN_LENGTH,
                 self::MAX_LENGTH,
                 $length,

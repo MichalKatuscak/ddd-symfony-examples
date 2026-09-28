@@ -12,7 +12,7 @@ final class OrderLockedBySagaException extends DomainRuleViolation
     public function __construct(public readonly OrderId $orderId)
     {
         parent::__construct(sprintf(
-            'Objednávku „%s“ právě zpracovává jiný proces.',
+            'Order "%s" is locked by a running process.',
             $orderId->value,
         ));
     }

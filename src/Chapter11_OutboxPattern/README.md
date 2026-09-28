@@ -19,20 +19,31 @@ Testy: `./vendor/bin/phpunit tests/Chapter11`
   `OrderPlaced`, `OrderItemAdded` za každou položku, `OrderConfirmed`
   ([15.04](https://ddd-v-symfony.katuscak.cz/outbox-pattern#order-aggregate-heading)).
   Továrna objednávku rovnou zamkne pro ságu.
-- `PlaceOrderHandler` překládá doménové události na jedinou
-  `OrderPlacedIntegrationEvent` s vlastním `eventId`. Dílčí události zůstávají
-  v kontextu Ordering, neznámá událost končí `LogicException`.
+- `PlaceOrderHandler` pošle každou doménovou událost synchronně na `event.bus`
+  posluchačům v kontextu Ordering a na hranici kontextu je přeloží na jedinou
+  `OrderPlacedIntegrationEvent` s vlastním `eventId`, kterou uloží do outboxu.
+  Neznámá událost končí `LogicException`. Payload serializuje
+  `IntegrationEventSerializer`
+  ([15.05](https://ddd-v-symfony.katuscak.cz/outbox-pattern#serializer-heading)).
 - `OutboxMessage` má jedenáct vlastností podle jedenácti sloupců tabulky
   ([15.03](https://ddd-v-symfony.katuscak.cz/outbox-pattern#vyznam-sloupcu-heading)).
   `markFailed()` nechá řádek `pending` s exponenciálním odkladem a do `failed`
-  ho pošle až po pátém pokusu. Výpadek brokera tak zprávu neodepíše.
+  ho pošle až po pátém pokusu.
+- Relay rozlišuje dva druhy chyb
+  ([Backpressure](https://ddd-v-symfony.katuscak.cz/outbox-pattern#backpressure-heading)).
+  Výpadek brokera (`TransportException`) průchod přeruší, řádek nechá `pending`
+  bez započteného pokusu a `app:outbox:dispatch` čeká s backoffem 1 s, 2 s … 30 s.
+  Chybu konkrétní zprávy (neznámý typ, denormalizace) zapíše `markFailed()`.
 - `OutboxMessageFactory` rekonstruuje zprávu jen z whitelistu typů.
 - `OrderPlacedReadModelUpdater` se ptá inboxu, provede upsert a zapíše
   `(eventId, consumer)`. Inbox duplicitní zápis odmítne výjimkou, nikdy ho tiše
   nepřepíše.
-- `DbalInboxRepository` je inbox z knihy nad DBAL. `markProcessed()`
-  `UniqueConstraintViolationException` nechytá. Test nad SQLite ověřuje, že
-  souběžný duplikát shodí transakci i s vedlejším efektem.
+- `DbalInboxRepository` je inbox z knihy nad DBAL. `event_id` i `id` předává
+  s typem `UuidType::NAME`, takže je zapíše v podobě platformy (SQLite a MySQL
+  binárně, PostgreSQL nativní UUID) stejně jako mapování `InboxMessage`.
+  `markProcessed()` `UniqueConstraintViolationException` nechytá. Test nad SQLite
+  s binárními sloupci ověřuje uložený tvar i to, že souběžný duplikát shodí
+  transakci i s vedlejším efektem.
 
 ## Čím se ukázka liší od knihy a proč
 
@@ -54,6 +65,9 @@ ke kapitole o ságách a relay by pak rozjel i ságu.
 
 **Smyčka relaye ve službě.** V knize žije celá smyčka v `OutboxDispatchCommand`.
 Ukázka jeden průchod vytáhla do `OutboxRelay`, aby ho mohl spustit i controller.
+Při výpadku brokera proto `OutboxRelay` průchod ukončí a vrátí příznak
+`brokerUnavailable`; backoff řídí příkaz (v knize `continue 2` přímo ve smyčce).
+Stránka na backoff nečeká, broker v ní „naskočí“ hned.
 Příkaz `php bin/console app:outbox:dispatch --time-limit=1` ukazuje tvar
 trvale běžícího procesu; v novém procesu je ovšem outbox v paměti prázdný.
 

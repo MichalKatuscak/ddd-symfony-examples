@@ -48,11 +48,6 @@ final class InMemoryUserRepository implements UserRepository
         return null;
     }
 
-    public function existsByEmail(Email $email): bool
-    {
-        return $this->findByEmail($email) !== null;
-    }
-
     public function remove(User $user): void
     {
         unset($this->storage[(string) $user->id]);

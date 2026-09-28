@@ -7,6 +7,9 @@ namespace App\Tests\Chapter05\Ordering\Application;
 use App\Chapter05_CQRS\Ordering\Application\Command\PlaceOrder;
 use App\Chapter05_CQRS\Ordering\Application\Handler\PlaceOrderHandler;
 use App\Chapter05_CQRS\Ordering\Application\IntegrationEvent\OrderPlacedIntegrationEvent;
+use App\Chapter05_CQRS\Ordering\Domain\Event\OrderConfirmed;
+use App\Chapter05_CQRS\Ordering\Domain\Event\OrderItemAdded;
+use App\Chapter05_CQRS\Ordering\Domain\Event\OrderPlaced;
 use App\Chapter05_CQRS\Ordering\Domain\ValueObject\OrderId;
 use App\Chapter05_CQRS\Ordering\Domain\ValueObject\OrderStatus;
 use App\Chapter05_CQRS\Ordering\Infrastructure\Repository\InMemoryOrderRepository;
@@ -61,14 +64,23 @@ final class PlaceOrderHandlerTest extends TestCase
         self::assertSame(164700, $order->totalAmount()->amountInCents);
     }
 
-    public function test_dispatches_only_the_integration_event(): void
+    public function test_dispatches_domain_events_and_single_integration_event(): void
     {
         $orderId = $this->place();
 
-        // Doménové OrderPlaced, OrderItemAdded a OrderConfirmed zůstávají
-        // uvnitř kontextu. Ven jde jediná zpráva s celou objednávkou.
-        self::assertCount(1, $this->dispatched);
-        $event = $this->dispatched[0];
+        // Doménové události dostanou posluchači v kontextu; integrační tvar
+        // má jen OrderPlaced a nese celou objednávku.
+        self::assertSame(
+            [
+                OrderPlaced::class,
+                OrderPlacedIntegrationEvent::class,
+                OrderItemAdded::class,
+                OrderItemAdded::class,
+                OrderConfirmed::class,
+            ],
+            array_map(static fn (object $m): string => $m::class, $this->dispatched->getArrayCopy()),
+        );
+        $event = $this->dispatched[1];
         self::assertInstanceOf(OrderPlacedIntegrationEvent::class, $event);
         self::assertSame($orderId->value, $event->orderId);
         self::assertSame(self::CUSTOMER, $event->customerId);

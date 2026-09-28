@@ -26,7 +26,7 @@ final class InMemoryPaymentGateway implements PaymentGateway
     public function charge(string $customerId, int $amountCents): string
     {
         if ($this->alwaysFails) {
-            throw new \RuntimeException('Platba zamítnuta.');
+            throw new \RuntimeException('Payment declined.');
         }
 
         return (string) Uuid::v7();

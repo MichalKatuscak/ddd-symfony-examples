@@ -28,6 +28,8 @@ final readonly class Money
     public function add(self $other): self
     {
         if ($this->currency !== $other->currency) {
+            // Vědomá zkratka: v Shared Kernelu by pojmenovaná výjimka znamenala
+            // další sdílený typ. Uvnitř kontextu patří pojmenovaná třída.
             throw new \DomainException(
                 "Cannot add {$this->currency->value} and {$other->currency->value}"
             );
@@ -39,6 +41,7 @@ final readonly class Money
     public function subtract(self $other): self
     {
         if ($this->currency !== $other->currency) {
+            // Stejná zkratka jako v add().
             throw new \DomainException(
                 "Cannot subtract {$other->currency->value} from {$this->currency->value}"
             );

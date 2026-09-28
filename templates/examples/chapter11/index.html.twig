@@ -138,9 +138,10 @@
         <li><strong>PlaceOrderHandler</strong> uloží objednávku a do outboxu zapíše integrační událost.
             V knize obojí obaluje <code>wrapInTransaction()</code>; broker se z handleru nevolá.</li>
         <li><strong>Relay</strong> vybere pending řádky, kterým uplynul odklad, publikuje je a označí
-            jako <code>sent</code>. Když broker zprávu nepřijme, <code>markFailed()</code> nechá řádek
-            <code>pending</code>, zvýší <code>attempts</code> a posune <code>available_at</code>.
-            Do <code>failed</code> řádek propadne až po pátém pokusu.</li>
+            jako <code>sent</code>. Výpadek brokera (<code>TransportException</code>) za zprávu nemůže:
+            relay průchod přeruší, řádek nechá <code>pending</code> bez započteného pokusu a worker čeká
+            s backoffem. Chybu konkrétní zprávy zapíše <code>markFailed()</code>: zvýší <code>attempts</code>
+            a posune <code>available_at</code>; do <code>failed</code> řádek propadne až po pátém pokusu.</li>
         <li><strong>Subscriber</strong> se nejdřív zeptá inboxu. Zpracovanou událost zahodí, jinak
             provede upsert read modelu a zapíše <code>(event_id, consumer)</code> do inboxu.
             Duplicitní zápis inbox odmítne výjimkou, nikdy ho tiše nepřepíše.</li>

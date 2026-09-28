@@ -13,13 +13,13 @@ final readonly class Email
     {
         if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
             throw new \InvalidArgumentException(
-                sprintf('"%s" není platná e-mailová adresa.', $value)
+                sprintf('"%s" is not a valid e-mail address.', $value)
             );
         }
 
         // Zakázané domény patří do továrny pro uživatelský vstup, ne do
         // konstruktoru. Konstruktorem prochází i rehydratace z databáze,
-        // takže by tohle pravidlo znemožnilo načíst legacy řádky, které
+        // takže by toto pravidlo znemožnilo načíst legacy řádky, které
         // takovou adresu už obsahují.
     }
 

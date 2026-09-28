@@ -15,13 +15,15 @@ use Symfony\Component\Messenger\Attribute\AsMessageHandler;
  * pro obrazovku „Přehled objednávek“ (kniha: order_dashboard, zde
  * ch05_order_dashboard, protože ukázky sdílejí jednu databázi).
  *
- * V knize mu zprávy doručuje worker z fronty (outbox → async_events).
- * V ukázce event.bus nemá transport, zpráva se zpracuje synchronně
- * v témže požadavku.
+ * Kanonický routing ho v knize nechává na synchronním event.bus, takže
+ * řádek vzniká ve stejné transakci jako zápis agregátu. Integrační
+ * OrderPlacedIntegrationEvent tam přichází z outboxu přes relay; ukázka
+ * outbox nemá a pošle ji rovnou PlaceOrderHandler.
  */
-// Priorita drží pořadí vůči Process Manageru z kapitoly o ságách, který
-// odebírá tutéž událost. V této ukázce jiný posluchač není; atribut
-// zůstává, aby projektor seděl s knihou.
+// Priorita je nutná: na synchronní sběrnici běží posluchači v pořadí
+// registrace a Process Manager z kapitoly o ságách odebírá tutéž událost.
+// V této ukázce jiný posluchač není; atribut zůstává, aby projektor seděl
+// s knihou.
 #[AsMessageHandler(bus: 'event.bus', priority: 10)]
 final class OrderDashboardProjector
 {

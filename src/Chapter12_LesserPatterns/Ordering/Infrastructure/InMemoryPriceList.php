@@ -26,7 +26,7 @@ final class InMemoryPriceList implements PriceList
     public function unitPriceOf(ProductId $productId): Money
     {
         $product = self::PRODUCTS[$productId->value]
-            ?? throw new \OutOfBoundsException(sprintf('Produkt „%s“ není v ceníku.', $productId->value));
+            ?? throw new \OutOfBoundsException(sprintf('Product "%s" is not in the price list.', $productId->value));
 
         return new Money($product['price'], Currency::CZK);
     }

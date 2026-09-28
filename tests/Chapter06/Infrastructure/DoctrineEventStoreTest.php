@@ -98,6 +98,15 @@ final class DoctrineEventStoreTest extends TestCase
         self::assertSame(['correlationId' => 'corr-1', 'causationId' => 'cause-1', 'userId' => 'user-1'], $metadata);
     }
 
+    public function test_correlation_id_stays_null_without_bound_context(): void
+    {
+        // Fallback na eventId by dal každé události vlastní korelaci.
+        $this->store->append($this->orderId, 'ordering.order', [OrderPlaced::create($this->orderId, 'customer-1')], 0);
+
+        $metadata = json_decode((string) $this->connection->fetchOne('SELECT metadata FROM ch06_event_store'), true);
+        self::assertNull($metadata['correlationId']);
+    }
+
     public function test_load_all_iterates_in_batches(): void
     {
         foreach (range(1, 5) as $i) {

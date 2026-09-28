@@ -18,7 +18,7 @@ final readonly class ShipmentId
         public string $value,
     ) {
         if (!Uuid::isValid($value)) {
-            throw new \InvalidArgumentException("Neplatné ShipmentId: {$value}");
+            throw new \InvalidArgumentException('ShipmentId must be a valid UUID');
         }
     }
 

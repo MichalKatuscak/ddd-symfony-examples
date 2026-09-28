@@ -11,6 +11,6 @@ final class InvalidVerificationTokenException extends DomainRuleViolation
 {
     public static function forUser(UserId $id): self
     {
-        return new self(sprintf('Ověřovací token uživatele „%s“ neodpovídá.', $id->value));
+        return new self(sprintf('Verification token for user "%s" does not match.', $id->value));
     }
 }

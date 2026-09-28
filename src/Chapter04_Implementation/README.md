@@ -1,6 +1,6 @@
-# Kapitola 10: Implementace DDD v Symfony
+# Kapitola 10: Implementace v Symfony 8
 
-Ukázka ke kapitole [Implementace DDD v Symfony](https://ddd-v-symfony.katuscak.cz/implementace-v-symfony).
+Ukázka ke kapitole [Implementace v Symfony 8](https://ddd-v-symfony.katuscak.cz/implementace-v-symfony).
 Registrace uživatele prochází celou cestou z knihy: formulář, command, command bus,
 handler, agregát, Doctrine a zpět přes query bus k profilu.
 
@@ -70,4 +70,4 @@ ne mock.
 
 ## Odkaz na příručku
 
-[Implementace DDD v Symfony](https://ddd-v-symfony.katuscak.cz/implementace-v-symfony)
+[Implementace v Symfony 8](https://ddd-v-symfony.katuscak.cz/implementace-v-symfony)

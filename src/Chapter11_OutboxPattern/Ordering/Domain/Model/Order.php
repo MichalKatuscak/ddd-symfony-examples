@@ -28,7 +28,7 @@ use App\Shared\Domain\Money;
  *
  * Ukázka ho drží jako vlastní kopii, protože placeWithItems() je statická
  * továrna na téže třídě – zvenku ji ke kanonickému Order přidat nejde.
- * Kapitola o ságách (ukázka Chapter07_Sagas) používá právě tuhle třídu,
+ * Kapitola o ságách (ukázka Chapter07_Sagas) používá právě tuto třídu,
  * stejně jako kniha navazuje na továrnu z Outboxu.
  */
 final class Order extends AggregateRoot
@@ -88,7 +88,7 @@ final class Order extends AggregateRoot
         // sága nemohla zavolat markPaid() a uvázla by v prvním kroku.
         $order->confirm();
 
-        // Od tohohle okamžiku nad objednávkou běží proces. Zámek uvolní
+        // Od tohoto okamžiku nad objednávkou běží proces. Zámek uvolní
         // až sága, ať skončí úspěchem nebo kompenzací.
         $order->lockForSaga();
 
@@ -99,7 +99,7 @@ final class Order extends AggregateRoot
     {
         if ($this->status !== OrderStatus::Draft) {
             throw InvalidOrderStateTransitionException::notAllowedInState(
-                'přidání položky',
+                'addItem',
                 $this->status->value,
             );
         }

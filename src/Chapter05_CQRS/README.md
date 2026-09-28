@@ -21,9 +21,10 @@ Testy: `./vendor/bin/phpunit tests/Chapter05`
 - **Write model** jako výřez kanonického `Order` s továrnou `placeWithItems()`:
   události jdou v pořadí `OrderPlaced`, `OrderItemAdded` za každou položku,
   `OrderConfirmed`.
-- **Překlad na integrační událost.** Handler z `OrderPlaced` sestaví
-  `OrderPlacedIntegrationEvent` s položkami a součtem. Dílčí události zůstávají
-  v kontextu, neznámá událost končí `LogicException`.
+- **Překlad na integrační událost.** Handler každou doménovou událost pošle na
+  `event.bus` posluchačům v kontextu a z `OrderPlaced` navíc sestaví
+  `OrderPlacedIntegrationEvent` s položkami a součtem. Neznámá událost končí
+  `LogicException`.
 - **`OrderDashboardProjector`** na `event.bus` s prioritou 10
   ([12.11](https://ddd-v-symfony.katuscak.cz/cqrs#denorm-projekce-heading)).
   Upsert přepíše řádek jen tehdy, když je událost novější než zapsaný stav
@@ -41,15 +42,16 @@ Testy: `./vendor/bin/phpunit tests/Chapter05`
   ([12.12](https://ddd-v-symfony.katuscak.cz/cqrs#ec-priklad-heading)).
 
 `RegisterUser` a `GetUserProfile`, které kapitola také používá, jsou tytéž třídy
-jako v kapitole Implementace v Symfony; spustitelné jsou v `Chapter04_Implementation`.
+jako v kapitole Implementace v Symfony 8; spustitelné jsou v `Chapter04_Implementation`.
 
 ## V čem se ukázka od knihy liší
 
-- **Synchronní projekce.** Kniha integrační událost ukládá do outboxu a projektor
-  běží ve workeru, takže mezi zápisem a čtením je okno eventual consistency.
-  Ukázka ji po uložení pošle na `event.bus` v témže procesu, což kniha popisuje
-  jako nejjednodušší cestu (sekce „Kdo doménové události odešle“). Outbox ukazuje
-  `Chapter11_OutboxPattern`.
+- **Integrační událost bez outboxu.** Kniha `OrderPlacedIntegrationEvent` ukládá
+  do outboxu ve stejné transakci jako agregát a na `event.bus` ji posílá relay.
+  Ukázka outbox nemá: handler ji po uložení pošle na `event.bus` sám, v témže
+  procesu. Projektor pak běží synchronně jako v knize, jen bez společné transakce
+  se zápisem – write model je v paměti a sběrnice nemá `doctrine_transaction`
+  (sekce „Kdo doménové události odešle“). Outbox ukazuje `Chapter11_OutboxPattern`.
 - **Write model v paměti.** Kapitola je o čtecí straně. Repozitář objednávek drží
   data jen po dobu požadavku; trvalý je read model v SQLite. Doctrine mapování
   agregátu patří kapitole Návrh agregátu, repozitář nad EntityManagerem ukazuje

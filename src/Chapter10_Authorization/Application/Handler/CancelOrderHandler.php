@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Chapter10_Authorization\Application\Handler;
 
-use App\Chapter10_Authorization\Application\Command\CancelOrderCommand;
+use App\Chapter10_Authorization\Application\Command\CancelOrder;
 use App\Chapter10_Authorization\Application\Exception\AccessDeniedDomainException;
 use App\Chapter10_Authorization\Domain\Repository\OrderRepository;
 use App\Chapter10_Authorization\Domain\SystemActor;
@@ -31,7 +31,7 @@ final readonly class CancelOrderHandler
         private MessageBusInterface $eventBus,
     ) {}
 
-    public function __invoke(CancelOrderCommand $command): void
+    public function __invoke(CancelOrder $command): void
     {
         $order = $this->orders->get($command->orderId);
 
@@ -56,7 +56,7 @@ final readonly class CancelOrderHandler
         $this->orders->save($order);
         $this->em->flush();
 
-        // Bez tohohle kroku agregát skončí v cancelled, ale read model
+        // Bez tohoto kroku agregát skončí v cancelled, ale read model
         // zůstane na původním stavu. Nic nespadne – stavy se jen rozejdou.
         foreach ($order->releaseEvents() as $event) {
             $this->eventBus->dispatch($event);

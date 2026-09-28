@@ -8,11 +8,11 @@ final class EmptyOrderException extends \DomainException
 {
     public static function cannotConfirm(): self
     {
-        return new self('Objednávku bez položek nelze potvrdit.');
+        return new self('Cannot confirm an order without items.');
     }
 
     public static function cannotBePlaced(): self
     {
-        return new self('Objednávka musí mít alespoň jednu položku.');
+        return new self('Order must contain at least one item.');
     }
 }

@@ -30,7 +30,7 @@ final class OrderFromCartFactory
 
     public function fromCart(CartId $cartId, CustomerId $customer): Order
     {
-        $cart = $this->carts->getById($cartId);
+        $cart = $this->carts->get($cartId);
 
         if ($cart->isEmpty()) {
             // Zkratka: v projektu pojmenovaná výjimka, např. EmptyCartException.

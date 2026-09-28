@@ -38,7 +38,7 @@ entitu, hodnotové objekty, agregát, repozitář, doménovou službu a doménov
 - **Bez event busu a transakce.** Kniha v sekci 06.09 ukazuje handler, který po `flush()`
   pošle události na `event.bus`. Ukázka nemá databázi ani Messenger, a tak události po
   uložení do repozitáře v paměti jen vypíše. Plné zapojení ukazuje ukázka kapitoly
-  Implementace DDD v Symfony 8 (`Chapter04_Implementation`).
+  Implementace v Symfony 8 (`Chapter04_Implementation`).
 - **`cancel()` nevydává událost.** Stejně jako v knize: podoba ze Základních konceptů
   důvod a čas storna jen přijímá. Událost `OrderCancelled` a další přechody
   (`markPaid()`, `ship()`) má plná verze agregátu v `Chapter02_AggregateDesign`.

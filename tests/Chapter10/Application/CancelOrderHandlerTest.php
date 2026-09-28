@@ -9,7 +9,7 @@ use App\Chapter02_AggregateDesign\Domain\Order\Event\OrderCancelled;
 use App\Chapter02_AggregateDesign\Domain\Order\Exception\OrderLockedBySagaException;
 use App\Chapter02_AggregateDesign\Domain\Order\OrderStatus;
 use App\Chapter02_AggregateDesign\Domain\Order\ProductId;
-use App\Chapter10_Authorization\Application\Command\CancelOrderCommand;
+use App\Chapter10_Authorization\Application\Command\CancelOrder;
 use App\Chapter10_Authorization\Application\Exception\AccessDeniedDomainException;
 use App\Chapter10_Authorization\Application\Handler\CancelOrderHandler;
 use App\Chapter10_Authorization\Domain\Order\Order;
@@ -59,7 +59,7 @@ final class CancelOrderHandlerTest extends TestCase
     {
         $order = $this->givenOrderOf(self::OWNER);
 
-        ($this->handler)(new CancelOrderCommand($order->id, 'changed mind', CustomerId::fromString(self::OWNER)));
+        ($this->handler)(new CancelOrder($order->id, 'changed mind', CustomerId::fromString(self::OWNER)));
 
         self::assertSame(OrderStatus::Cancelled, $order->status);
         self::assertSame(1, $this->orders->saves);
@@ -72,7 +72,7 @@ final class CancelOrderHandlerTest extends TestCase
         $order = $this->givenOrderOf(self::OWNER);
 
         $this->expectException(AccessDeniedDomainException::class);
-        ($this->handler)(new CancelOrderCommand($order->id, 'cizí storno', CustomerId::fromString(self::STRANGER)));
+        ($this->handler)(new CancelOrder($order->id, 'cizí storno', CustomerId::fromString(self::STRANGER)));
     }
 
     public function testSystemActorMayCompensateLockedOrder(): void
@@ -81,7 +81,7 @@ final class CancelOrderHandlerTest extends TestCase
         $order->lockForSaga();
 
         // Kompenzace ságy nesmí ztroskotat na zámku, který drží ona sama.
-        ($this->handler)(new CancelOrderCommand($order->id, 'kompenzace', CustomerId::fromString(SystemActor::ID)));
+        ($this->handler)(new CancelOrder($order->id, 'kompenzace', CustomerId::fromString(SystemActor::ID)));
 
         self::assertSame(OrderStatus::Cancelled, $order->status);
     }
@@ -92,7 +92,7 @@ final class CancelOrderHandlerTest extends TestCase
         $order->lockForSaga();
 
         $this->expectException(OrderLockedBySagaException::class);
-        ($this->handler)(new CancelOrderCommand($order->id, 'teď ne', CustomerId::fromString(self::OWNER)));
+        ($this->handler)(new CancelOrder($order->id, 'teď ne', CustomerId::fromString(self::OWNER)));
     }
 
     private function givenOrderOf(string $customerId): Order

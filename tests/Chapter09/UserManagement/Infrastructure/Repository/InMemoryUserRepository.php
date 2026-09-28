@@ -45,14 +45,6 @@ final class InMemoryUserRepository implements UserRepository
         return null;
     }
 
-    public function findActiveUsers(): array
-    {
-        return array_values(array_filter(
-            $this->storage,
-            static fn (User $user): bool => $user->status()->isActive(),
-        ));
-    }
-
     public function count(): int
     {
         return count($this->storage);

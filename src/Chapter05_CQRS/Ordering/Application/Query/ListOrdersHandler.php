@@ -33,7 +33,7 @@ final readonly class ListOrdersHandler
     public function __invoke(ListOrders $query): array
     {
         $column = self::SORTABLE[$query->sortBy]
-            ?? throw new \InvalidArgumentException(sprintf('Podle „%s“ řadit nelze.', $query->sortBy));
+            ?? throw new \InvalidArgumentException(sprintf('Cannot sort by "%s".', $query->sortBy));
         $direction = strtoupper($query->sortDirection) === 'ASC' ? 'ASC' : 'DESC';
 
         $qb = $this->connection->createQueryBuilder()

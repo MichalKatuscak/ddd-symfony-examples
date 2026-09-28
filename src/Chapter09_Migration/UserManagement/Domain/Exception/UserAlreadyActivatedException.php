@@ -11,6 +11,6 @@ final class UserAlreadyActivatedException extends DomainRuleViolation
 {
     public static function forUser(UserId $id): self
     {
-        return new self(sprintf('Uživatel „%s“ už je aktivovaný.', $id->value));
+        return new self(sprintf('User "%s" is already activated.', $id->value));
     }
 }

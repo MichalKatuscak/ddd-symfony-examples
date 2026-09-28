@@ -7,7 +7,7 @@ namespace App\Chapter10_Authorization\Application\Command;
 use App\Chapter02_AggregateDesign\Domain\Order\CustomerId;
 use App\Chapter02_AggregateDesign\Domain\Order\OrderId;
 
-final readonly class CancelOrderCommand
+final readonly class CancelOrder
 {
     public function __construct(
         public OrderId $orderId,

@@ -10,6 +10,6 @@ final class UnmappableLegacyStatusException extends \RuntimeException
 {
     public function __construct(string $legacyStatus)
     {
-        parent::__construct(sprintf('Legacy stav "%s" nemá v doméně protějšek.', $legacyStatus));
+        parent::__construct(sprintf('Legacy status "%s" has no domain counterpart.', $legacyStatus));
     }
 }

@@ -14,10 +14,12 @@ use App\Chapter11_OutboxPattern\Ordering\Domain\Model\OrderItem;
 use App\Chapter11_OutboxPattern\Ordering\Domain\Repository\OrderRepository;
 use App\Chapter11_OutboxPattern\Ordering\Domain\ValueObject\CustomerId;
 use App\Chapter11_OutboxPattern\Ordering\Domain\ValueObject\OrderId;
-use App\Chapter11_OutboxPattern\Outbox\Application\DomainEventSerializer;
+use App\Chapter11_OutboxPattern\Outbox\Application\IntegrationEventSerializer;
 use App\Chapter11_OutboxPattern\Outbox\Application\OutboxRepository;
 use App\Chapter11_OutboxPattern\Outbox\Domain\OutboxMessage;
+use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -34,7 +36,9 @@ final readonly class PlaceOrderHandler
     public function __construct(
         private OrderRepository $orders,
         private OutboxRepository $outbox,
-        private DomainEventSerializer $serializer,
+        private IntegrationEventSerializer $serializer,
+        #[Target('event.bus')]
+        private MessageBusInterface $eventBus,
     ) {}
 
     public function __invoke(PlaceOrder $command): OrderId
@@ -50,6 +54,11 @@ final readonly class PlaceOrderHandler
         // Doménová událost se do outboxu nedává přímo: nese hodnotové
         // objekty. Na hranici kontextu se překládá na integrační tvar.
         foreach ($order->releaseEvents() as $event) {
+            // Posluchači uvnitř kontextu Ordering dostanou každou doménovou
+            // událost synchronně, stále v téže transakci (kapitola Základní
+            // koncepty DDD). Outbox řeší jen to, co opouští proces.
+            $this->eventBus->dispatch($event);
+
             // placeWithItems() nahraje OrderPlaced, OrderItemAdded za každou
             // položku a OrderConfirmed. Integrační tvar má jen OrderPlaced –
             // nese celou objednávku včetně položek. Neznámá událost je chyba
@@ -72,7 +81,7 @@ final readonly class PlaceOrderHandler
                     totalAmountCents: $order->totalAmount()->amountInCents,
                     occurredAt: $event->occurredAt,
                 ),
-                default => throw new \LogicException('Chybí překlad pro ' . $event::class),
+                default => throw new \LogicException('Missing integration translation for ' . $event::class),
             };
 
             if ($integrationEvent === null) {

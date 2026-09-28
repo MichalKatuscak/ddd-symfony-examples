@@ -32,7 +32,8 @@ final class DoctrineUserRepository implements UserRepository
     public function findById(UserId $id): ?User
     {
         // Identifikátor se předává jako hodnotový objekt, ne jako řetězec:
-        // custom typ převádí jen instanci UserId, na cokoli jiného selže.
+        // custom typ převádí jen instanci UserId a na řetězec vyhodí
+        // InvalidType (viz UserIdType).
         return $this->em->find(User::class, $id);
     }
 

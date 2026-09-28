@@ -13,7 +13,7 @@ final readonly class UserId
     ) {
         if (!Uuid::isValid($value)) {
             throw new \InvalidArgumentException(
-                sprintf('Neplatné UserId: "%s".', $value),
+                sprintf('Invalid UserId: "%s".', $value),
             );
         }
     }

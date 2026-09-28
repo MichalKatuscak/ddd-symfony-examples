@@ -10,7 +10,7 @@
     <h1>Ukázka: orchestrovaná sága s kompenzacemi</h1>
     <p><code>OrderProcessManager</code> reaguje na události z kontextů Payment, Warehouse a Shipping
        a podle nich posílá další příkaz. Sám stav objednávky nemění – posílá
-       <code>MarkOrderPaid</code>, <code>ShipOrder</code> nebo <code>CancelOrderCommand</code>.
+       <code>MarkOrderPaid</code>, <code>ShipOrder</code> nebo <code>CancelOrder</code>.
        Když krok selže, vrátí hotové kroky kompenzacemi.</p>
 
     <form method="post" data-turbo="false" class="mb-4">

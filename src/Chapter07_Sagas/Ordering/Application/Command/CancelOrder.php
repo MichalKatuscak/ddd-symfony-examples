@@ -8,7 +8,7 @@ use App\Chapter11_OutboxPattern\Ordering\Domain\ValueObject\CustomerId;
 use App\Chapter11_OutboxPattern\Ordering\Domain\ValueObject\OrderId;
 
 /** Tvar z kapitoly o autorizaci: identita aktéra cestuje v příkazu. */
-final readonly class CancelOrderCommand
+final readonly class CancelOrder
 {
     public function __construct(
         public OrderId $orderId,

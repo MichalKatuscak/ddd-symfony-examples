@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Chapter07_Sagas\Ordering\Application\Handler;
 
-use App\Chapter07_Sagas\Ordering\Application\Command\CancelOrderCommand;
+use App\Chapter07_Sagas\Ordering\Application\Command\CancelOrder;
 use App\Chapter07_Sagas\Ordering\Application\Command\CheckSagaTimeout;
 use App\Chapter07_Sagas\Ordering\Application\Saga\OrderSaga;
 use App\Chapter07_Sagas\Ordering\Application\Saga\OrderSagaRepository;
@@ -30,7 +30,7 @@ final readonly class CheckSagaTimeoutHandler
     {
         $state = $this->sagaRepository->findByCorrelationId($command->orderId);
 
-        // Sága se od posledního kroku posunula, nebo pro tuhle objednávku
+        // Sága se od posledního kroku posunula, nebo pro tuto objednávku
         // vůbec neběží – timeout v obou případech neplatí.
         if ($state === null || $state->status()->value !== $command->expectedStatus) {
             return;
@@ -51,7 +51,7 @@ final readonly class CheckSagaTimeoutHandler
         $state->transitionTo(OrderSagaStatus::Failed);
         $this->sagaRepository->save($state);
 
-        $this->commandBus->dispatch(new CancelOrderCommand(
+        $this->commandBus->dispatch(new CancelOrder(
             orderId: OrderId::fromString($state->correlationId()),
             reason: 'Payment timeout',
             actorId: CustomerId::fromString(SystemActor::ID),

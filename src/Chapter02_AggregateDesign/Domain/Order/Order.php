@@ -25,7 +25,7 @@ use App\Shared\Domain\Money;
  * Collection a OrderItem nemá zpětnou referenci na kořen. Důvod
  * a mapování popisuje README ukázky.
  */
-class Order extends AggregateRoot
+final class Order extends AggregateRoot
 {
     /** @var list<OrderItem> */
     private array $items = [];
@@ -80,7 +80,7 @@ class Order extends AggregateRoot
     {
         if ($this->status !== OrderStatus::Draft) {
             throw InvalidOrderStateTransitionException::notAllowedInState(
-                'přidání položky',
+                'addItem',
                 $this->status->value,
             );
         }
@@ -120,7 +120,7 @@ class Order extends AggregateRoot
         $this->record(new OrderConfirmed($this->id, $this->customerId, $this->placedAt));
     }
 
-    // Bez tohohle přechodu je ship() nedosažitelná: do stavu Paid
+    // Bez tohoto přechodu je ship() nedosažitelná: do stavu Paid
     // se objednávka jinak nedostane.
     public function markPaid(): void
     {
@@ -172,7 +172,7 @@ class Order extends AggregateRoot
     // o autorizaci na něm staví storno lhůtu a testy potřebují zadat vlastní.
     public function cancel(string $reason, \DateTimeImmutable $when): void
     {
-        // Zámek drží proces, ne uživatel. Bez téhle podmínky by storno
+        // Zámek drží proces, ne uživatel. Bez této podmínky by storno
         // prošlo uprostřed ságy, ta by dál strhla platbu a vytvořila
         // zásilku k objednávce, která už neexistuje.
         if ($this->sagaInProgress) {
@@ -190,7 +190,7 @@ class Order extends AggregateRoot
         }
 
         // Opakované storno není chyba volajícího, jen už není co dělat.
-        // Bez téhle větve by retry ságy shodil handler.
+        // Bez této větve by retry ságy shodil handler.
         if ($this->status === OrderStatus::Cancelled) {
             return;
         }

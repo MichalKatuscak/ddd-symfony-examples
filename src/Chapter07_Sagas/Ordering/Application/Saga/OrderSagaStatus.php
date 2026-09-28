@@ -15,7 +15,7 @@ enum OrderSagaStatus: string
 
     /**
      * Z terminálního stavu už sága nikam nepokračuje. Opožděná událost
-     * ji nesmí vzkřísit – proto se na tuhle otázku ptá každý handler
+     * ji nesmí vzkřísit – proto se na tuto otázku ptá každý handler
      * hned na začátku.
      */
     public function isTerminal(): bool

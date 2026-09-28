@@ -11,7 +11,7 @@ final readonly class ShipmentId
     public function __construct(public string $value)
     {
         if (!Uuid::isValid($value)) {
-            throw new \InvalidArgumentException(sprintf('Neplatné ShipmentId: „%s“.', $value));
+            throw new \InvalidArgumentException('ShipmentId must be a valid UUID');
         }
     }
 

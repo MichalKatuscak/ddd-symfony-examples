@@ -16,7 +16,7 @@ Otevřete [http://localhost:8000/examples/migrace-z-crud](http://localhost:8000/
 
 - `CrudVersion\User` – výchozí stav: gettery a settery, stav jako řetězec, žádné pravidlo.
 - `UserManagement\Domain\Model\User` – rozšíření kanonického `User` z kapitoly
-  [Implementace v Symfony](https://ddd-v-symfony.katuscak.cz/implementace-v-symfony#entity-example-heading).
+  [Implementace v Symfony 8](https://ddd-v-symfony.katuscak.cz/implementace-v-symfony#entity-example-heading).
   Vlastnosti `createdAt` a `hashedPassword` i getter `hashedPassword()` zůstávají,
   přibývá aktivační model: `UserStatus`, `VerificationToken`, `activate()` a událost
   `UserActivated`. Druhá aktivace skončí `UserAlreadyActivatedException::forUser()`,
@@ -27,7 +27,7 @@ Otevřete [http://localhost:8000/examples/migrace-z-crud](http://localhost:8000/
   `guerrillamail.com`) patří do `Email::fromUserInput()`, aby šly načíst legacy řádky.
 - `LegacyUserTranslator` s vyjmenovaným mapováním stavů; neznámý stav hlasitě selže
   (`UnmappableLegacyStatusException`).
-- `RegisterUser` se stejným FQCN a poli jako v kapitole Implementace v Symfony
+- `RegisterUser` se stejným FQCN a poli jako v kapitole Implementace v Symfony 8
   (`UserManagement\Registration\Command`). Handler generuje identitu přes
   `UserId::generate()` (UUID v7) a duplicitu e-mailu nehlídá dotazem, ale unique
   constraintem přeloženým na `DuplicateEmailException`.

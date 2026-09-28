@@ -18,7 +18,7 @@ abstract class EventSourcedAggregate
      * a zvýší verzi streamu – nezbytné pro optimistic locking.
      *
      * Jméno se záměrně liší od record() ve stavově ukládaném AggregateRoot:
-     * tady metoda událost navíc aplikuje a inkrementuje verzi.
+     * zde metoda událost navíc aplikuje a inkrementuje verzi.
      */
     protected function recordEvent(DomainEvent $event): void
     {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Chapter07\Saga;
 
-use App\Chapter07_Sagas\Ordering\Application\Command\CancelOrderCommand;
+use App\Chapter07_Sagas\Ordering\Application\Command\CancelOrder;
 use App\Chapter07_Sagas\Ordering\Application\Command\CheckSagaTimeout;
 use App\Chapter07_Sagas\Ordering\Application\Command\MarkOrderPaid;
 use App\Chapter07_Sagas\Ordering\Application\Command\ReleaseOrderLock;
@@ -152,7 +152,7 @@ final class OrderProcessManagerTest extends TestCase
 
         self::assertSame(OrderSagaStatus::Failed, $this->state()->status());
         $cancel = $this->steps()[1];
-        self::assertInstanceOf(CancelOrderCommand::class, $cancel);
+        self::assertInstanceOf(CancelOrder::class, $cancel);
         self::assertSame(SystemActor::ID, $cancel->actorId->value);
     }
 
@@ -184,7 +184,7 @@ final class OrderProcessManagerTest extends TestCase
         // Do Failed sága přejde až po potvrzení refundu.
         ($this->saga)(new RefundSucceeded(eventId: Uuid::v7(), orderId: self::ORDER_ID));
         self::assertSame(OrderSagaStatus::Failed, $this->state()->status());
-        self::assertInstanceOf(CancelOrderCommand::class, $this->steps()[1]);
+        self::assertInstanceOf(CancelOrder::class, $this->steps()[1]);
     }
 
     public function test_cancellation_compensates_completed_steps_in_reverse_order(): void

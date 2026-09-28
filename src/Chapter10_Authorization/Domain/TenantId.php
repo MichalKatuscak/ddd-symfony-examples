@@ -10,7 +10,7 @@ final readonly class TenantId
         public string $value,
     ) {
         if ($value === '') {
-            throw new \InvalidArgumentException('TenantId nesmí být prázdné.');
+            throw new \InvalidArgumentException('TenantId must not be empty.');
         }
     }
 

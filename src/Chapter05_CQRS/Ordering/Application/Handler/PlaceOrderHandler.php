@@ -47,12 +47,15 @@ final readonly class PlaceOrderHandler
         $this->orders->save($order);
 
         // Kniha integrační událost ukládá do outboxu ve stejné transakci
-        // jako agregát (kapitola Outbox Pattern, ukázka Chapter11) a projektor
-        // ji dostane z fronty. Ukázka volí nejjednodušší cestu z 12.11:
-        // po uložení ji pošle na sběrnici událostí v témže procesu. Spadne-li
-        // proces mezi uložením a dispatchem, projekce se tiše rozejde
-        // s write modelem – proto v produkci Outbox.
+        // jako agregát (kapitola Outbox Pattern, ukázka Chapter11) a z něj ji
+        // publikuje relay. Ukázka outbox nemá a pošle ji po uložení na sběrnici
+        // událostí v témže procesu. Spadne-li proces mezi uložením a dispatchem,
+        // projekce se tiše rozejde s write modelem – proto v produkci Outbox.
         foreach ($order->releaseEvents() as $event) {
+            // Posluchači uvnitř kontextu dostanou každou doménovou událost
+            // synchronně, stejně jako v kanonickém handleru z kapitoly Outbox.
+            $this->eventBus->dispatch($event);
+
             // Integrační tvar má jen OrderPlaced – nese celou objednávku
             // i s položkami. Dílčí události zůstávají uvnitř kontextu;
             // neznámá událost je chyba v překladu, ne něco k tichému přeskočení.
@@ -75,7 +78,7 @@ final readonly class PlaceOrderHandler
                     occurredAt: $event->occurredAt,
                 ),
                 default => throw new \LogicException(
-                    'Chybí překlad pro ' . $event::class,
+                    'Missing integration translation for ' . $event::class,
                 ),
             };
 

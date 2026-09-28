@@ -22,7 +22,7 @@ final readonly class RegisterUser
         public string $email,
 
         // Hranice musí sedět s HashedPassword::fromPlainText(). Volnější
-        // pravidlo tady by pustilo heslo, které pak agregát odmítne.
+        // pravidlo zde by pustilo heslo, které pak agregát odmítne.
         #[Assert\NotBlank]
         #[Assert\Length(min: 12)]
         public string $password,

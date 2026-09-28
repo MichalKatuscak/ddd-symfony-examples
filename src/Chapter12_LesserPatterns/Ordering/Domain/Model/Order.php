@@ -13,7 +13,7 @@ use App\Shared\Domain\AggregateRoot;
 use App\Shared\Domain\Money;
 
 /**
- * Varianta Order s továrnami z kapitoly Méně známé taktické vzory (08.04).
+ * Varianta Order s továrnami z kapitoly Doplňující taktické vzory (08.04).
  *
  * Továrny stojí vedle kanonického Order::place(OrderId, CustomerId) a do
  * kanonického modelu nepatří. Kanonická továrna s položkami je

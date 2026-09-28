@@ -11,7 +11,7 @@ final readonly class Email
     ) {
         if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
             throw new \InvalidArgumentException(
-                sprintf('Neplatný formát e-mailu: "%s".', $value),
+                sprintf('Invalid e-mail format: "%s".', $value),
             );
         }
     }

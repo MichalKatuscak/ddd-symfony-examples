@@ -34,6 +34,9 @@ Testy: `./vendor/bin/phpunit tests/Chapter06`
 - `EventSourcedOrderRepository` vyjme události z agregátu až po úspěšném zápisu,
   takže při konfliktu verzí nezmizí.
 - `OrderSummaryProjector` s metodami `handle*()` registrovanými na `event.bus`.
+- `RequestEventMetadataProvider` zapisuje do metadat correlation, causation a user ID.
+  Bez navázaného kontextu (konzole, test) zůstává `correlationId` `null`: fallback
+  na `eventId` by dal každé události vlastní korelaci a řetěz příčin by se rozpadl.
 
 ## Čím se ukázka liší od knihy a proč
 
@@ -47,7 +50,8 @@ v `services.yaml`. Ten soubor sdílejí všechny kapitoly ukázek, takže mapa �
 v atributu `#[Autowire]` přímo u konstruktoru `EventSerializer`.
 
 **Synchronní projekce.** V knize čte nové řádky z `event_store` relay a posílá
-je na asynchronní transport ([13.08](https://ddd-v-symfony.katuscak.cz/event-sourcing#es-outbox-heading)).
+je na asynchronní transport `async_events` s frontou `events` – stejné jméno
+jako v kanonické konfiguraci z kapitoly CQRS ([13.08](https://ddd-v-symfony.katuscak.cz/event-sourcing#es-outbox-heading)).
 Ukázka asynchronní transport nemá. Controller proto po úspěšném zápisu pošle
 události na `event.bus` sám a projekce se aktualizuje ve stejném requestu –
 kompromis, který kniha popisuje v sekci

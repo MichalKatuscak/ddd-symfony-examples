@@ -24,12 +24,14 @@ vymáhá stav a storno lhůtu. K tomu ABAC politika a její tabulkový test.
   ověřuje přes `AccessDecisionManagerInterface::decide()`. Při zamítnutí storna zapíše
   důvod do `Vote::$reasons`.
 - **Handler** `CancelOrderHandler` – asynchronní varianta z kapitoly: autorizuje proti
-  `actorId` v `CancelOrderCommand`, systémová identita (`SystemActor`) má vlastní větev
+  `actorId` v `CancelOrder`, systémová identita (`SystemActor`) má vlastní větev
   a sama uvolní zámek ságy. Po uložení vyzvedne události a pošle je na event bus.
+  Na infrastrukturu nesahá: `OrderVoter` ani `SecurityUser` neimportuje.
 - **ABAC** `CancelOrderPolicy` nad ExpressionLanguage (`PolicyEvaluator`) s pravidly
   vlastník, stav `"confirmed"` a lhůta 24 h a tabulkový test podle sekce
   [Test pyramida pro autorizaci](https://ddd-v-symfony.katuscak.cz/autorizace-v-ddd#testing).
-- **Testovací pomocníci** `OrderFactory` a `SecurityUserFixture` ve stejné podobě jako v knize.
+- **Testovací pomocníci** `OrderFactory` (Object Mother, ne Foundry továrna)
+  a `SecurityUserFixture` ve stejné podobě jako v knize.
 
 ## V čem se ukázka od knihy liší
 
@@ -41,8 +43,14 @@ vymáhá stav a storno lhůtu. K tomu ABAC politika a její tabulkový test.
 - **Bez Doctrine a HTTP vrstvy.** `SecurityUser` není Doctrine entita, repozitář je
   v testech in-memory a `EntityManagerInterface` handleru je stub. Firewall, `access_control`
   s `form_login` a `enable_csrf`, `#[IsGranted]` na controlleru, `OrderValueResolver`,
-  `DomainExceptionListener`, read modely (11.07), multi-tenancy (11.09) a end-to-end test
-  ukázka nemá – potřebovaly by přihlašování, databázi a routy, které repozitář ukázek nenabízí.
+  `DomainExceptionListener` (v knize `Ordering\Infrastructure\Http`), read modely
+  (11.07, v knize `Ordering\Infrastructure\ReadModel`), `CreateSecurityUserOnUserRegistered`,
+  multi-tenancy (11.09) a end-to-end test ukázka nemá – potřebovaly by přihlašování,
+  databázi a routy, které repozitář ukázek nenabízí.
+- **Bez `RefundOrderHandler` a `ActorProvider`.** Varianta s `isGrantedForUser()`
+  z [Když je potřeba ve workeru celý Voter](https://ddd-v-symfony.katuscak.cz/autorizace-v-ddd#async-is-granted-for-user)
+  stojí na `Order::refund()`, které kniha výslovně nerozvádí. Ukázka by si ho musela
+  vymyslet, proto variantu vynechává. Voter atribut `order.refund` zná.
 - **Handler bez `#[AsMessageHandler(bus: 'command.bus')]`.** Command bus se v tomto
   projektu jmenuje `messenger.bus.command` a repozitář objednávek existuje jen v testech
   (in-memory). Handler proto volá jen test, se sběrnou atrapou event busu; v kontejneru

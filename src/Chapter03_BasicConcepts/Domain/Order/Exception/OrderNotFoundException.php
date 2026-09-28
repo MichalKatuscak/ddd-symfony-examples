@@ -14,6 +14,6 @@ final class OrderNotFoundException extends \DomainException
 {
     public static function withId(OrderId $id): self
     {
-        return new self(sprintf('Objednávka „%s“ neexistuje.', $id->value));
+        return new self(sprintf('Order "%s" not found.', $id->value));
     }
 }

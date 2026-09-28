@@ -1,6 +1,6 @@
-# Kapitola 8: Méně známé taktické vzory
+# Kapitola 8: Doplňující taktické vzory
 
-Ukázka ke kapitole [Méně známé taktické vzory](https://ddd-v-symfony.katuscak.cz/mene-zname-vzory):
+Ukázka ke kapitole [Doplňující taktické vzory](https://ddd-v-symfony.katuscak.cz/mene-zname-vzory):
 Specification, Domain Service, Factory a Module.
 
 ## Spuštění
@@ -43,7 +43,9 @@ Testy: `./vendor/bin/phpunit tests/Chapter12`
   specifikace (`remainderUnsatisfiedBy()`) chybí také: ukázka běží bez databáze.
 - **Doplněné třídy.** Kniha nerozepisuje `Account`, `Cart` ani `PricingService`.
   Ukázka jim dává jen to, co služby a factory volají; ceník a blacklist dodávají
-  porty `PriceList` a `BlacklistRegistry` s in-memory adaptéry.
+  porty `PriceList` a `BlacklistRegistry` s in-memory adaptéry. Repozitáře košíků
+  a účtů načítají přes `get()` jako v knize; chybějící záznam hlásí pojmenovanou
+  `CartNotFoundException`, resp. `AccountNotFoundException`, které kniha nevypisuje.
 - **Úložiště v paměti.** Repozitáře drží stav jen po dobu požadavku. Stránka skládá
   kroky, které by v aplikaci dělal command handler (checkout, převod); kniha
   je nerozepisuje.
@@ -53,4 +55,4 @@ Testy: `./vendor/bin/phpunit tests/Chapter12`
 
 ## Odkaz na příručku
 
-[Méně známé taktické vzory](https://ddd-v-symfony.katuscak.cz/mene-zname-vzory)
+[Doplňující taktické vzory](https://ddd-v-symfony.katuscak.cz/mene-zname-vzory)

@@ -48,7 +48,7 @@ final readonly class EventSerializer
     {
         $class = $this->typeMap[$envelope->eventType]
             ?? throw new \RuntimeException(
-                "Unknown event type {$envelope->eventType}. Chybí záznam v typeMap."
+                "Unknown event type {$envelope->eventType}. Missing entry in typeMap."
             );
 
         return $class::fromPayload($envelope->payload);

@@ -46,7 +46,7 @@ final class OrderTest extends TestCase
         $order = Order::place(OrderId::generate(), CustomerId::generate());
 
         $this->expectException(InvalidOrderStateTransitionException::class);
-        $this->expectExceptionMessage('Nelze přejít ze stavu „draft“ do stavu „shipped“.');
+        $this->expectExceptionMessage('Cannot transition from "draft" to "shipped".');
 
         $order->transitionTo(OrderStatus::Shipped);
     }

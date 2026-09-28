@@ -7,6 +7,7 @@ namespace App\Chapter11_OutboxPattern\Outbox\Infrastructure;
 use App\Chapter11_OutboxPattern\Ordering\Application\IntegrationEvent\OrderPlacedIntegrationEvent;
 use App\Chapter11_OutboxPattern\Outbox\Application\MessagePublisher;
 use App\Chapter11_OutboxPattern\Reporting\Application\Subscriber\OrderPlacedReadModelUpdater;
+use Symfony\Component\Messenger\Exception\TransportException;
 
 /**
  * Zástupce brokera. V knize relay posílá zprávu na event.bus do transportu
@@ -19,8 +20,9 @@ use App\Chapter11_OutboxPattern\Reporting\Application\Subscriber\OrderPlacedRead
  */
 final class InProcessPublisher implements MessagePublisher
 {
-    // Přepínač pro ukázku výpadku brokera: relay pak zprávu neodešle
-    // a řádek zůstane pending s odkladem.
+    // Přepínač pro ukázku výpadku brokera. Messenger v té situaci hází
+    // TransportException; relay pak průchod přeruší a řádek nechá pending
+    // bez započteného pokusu.
     private bool $unavailable = false;
 
     public function __construct(
@@ -35,12 +37,12 @@ final class InProcessPublisher implements MessagePublisher
     public function publish(object $message): void
     {
         if ($this->unavailable) {
-            throw new \RuntimeException('Broker je nedostupný (connection refused).');
+            throw new TransportException('Broker unavailable (connection refused).');
         }
 
         match (true) {
             $message instanceof OrderPlacedIntegrationEvent => ($this->orderPlacedUpdater)($message),
-            default => throw new \LogicException('Pro zprávu ' . $message::class . ' nemá ukázka odběratele.'),
+            default => throw new \LogicException('No subscriber for ' . $message::class . ' in this example.'),
         };
     }
 }

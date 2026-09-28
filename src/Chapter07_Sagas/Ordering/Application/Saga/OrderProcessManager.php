@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Chapter07_Sagas\Ordering\Application\Saga;
 
-use App\Chapter07_Sagas\Ordering\Application\Command\CancelOrderCommand;
+use App\Chapter07_Sagas\Ordering\Application\Command\CancelOrder;
 use App\Chapter07_Sagas\Ordering\Application\Command\CheckSagaTimeout;
 use App\Chapter07_Sagas\Ordering\Application\Command\MarkOrderPaid;
 use App\Chapter07_Sagas\Ordering\Application\Command\ReleaseOrderLock;
@@ -70,7 +70,7 @@ final class OrderProcessManager
             $event instanceof StockReserved => $this->onStockReserved($event),
             $event instanceof StockReservationFailed => $this->onStockReservationFailed($event),
             $event instanceof ShipmentCreated => $this->onShipmentCreated($event),
-            // Bez těchhle dvou větví uvázne sága navždy ve stavu Compensating:
+            // Bez těchto dvou větví uvázne sága navždy ve stavu Compensating:
             // event.bus má allow_no_handlers, takže se událost tiše ackne.
             $event instanceof RefundSucceeded => $this->onRefundSucceeded($event),
             $event instanceof RefundFailed => $this->onRefundFailed($event),
@@ -120,7 +120,7 @@ final class OrderProcessManager
         $state = $this->sagaRepository->findByCorrelationId($event->orderId);
 
         // Opožděná událost nesmí vzkřísit ukončenou ságu. Chybějící sága
-        // znamená, že událost patří objednávce mimo tenhle proces.
+        // znamená, že událost patří objednávce mimo tento proces.
         if ($state === null || $state->status()->isTerminal()) {
             return;
         }
@@ -134,7 +134,7 @@ final class OrderProcessManager
 
         $state->updateContext('transactionId', $event->transactionId);
 
-        // Bez tohohle řádku nemá pozdější kompenzace podle čeho poznat, že
+        // Bez tohoto řádku nemá pozdější kompenzace podle čeho poznat, že
         // platba proběhla, a RefundCustomer se nikdy neodešle.
         $state->updateContext('completedSteps', [
             ...$state->context()['completedSteps'],
@@ -159,7 +159,7 @@ final class OrderProcessManager
 
         $this->finish($state, OrderSagaStatus::Failed);
 
-        $this->commandBus->dispatch(new CancelOrderCommand(
+        $this->commandBus->dispatch(new CancelOrder(
             orderId: OrderId::fromString($event->orderId),
             reason: 'Platba selhala: ' . $event->failureReason,
             // Sága není člověk. Dostává explicitní systémovou identitu,
@@ -225,7 +225,7 @@ final class OrderProcessManager
     {
         $state = $this->sagaRepository->findByCorrelationId($event->orderId->value);
 
-        // Vlastní kompenzace ságu takhle nevzkřísí: ta už je v Compensating
+        // Vlastní kompenzace ságu takto nevzkřísí: ta už je v Compensating
         // nebo terminálním stavu.
         if ($state === null || $state->status()->isTerminal()
             || $state->status() === OrderSagaStatus::Compensating) {
@@ -272,7 +272,7 @@ final class OrderProcessManager
         // Zámek uvolní CancelOrderHandler: příkaz přichází pod systémovou
         // identitou. Order::cancel() je idempotentní, takže nevadí, když
         // objednávku zrušil už zákazník a refund byl jen kompenzací.
-        $this->commandBus->dispatch(new CancelOrderCommand(
+        $this->commandBus->dispatch(new CancelOrder(
             orderId: OrderId::fromString($event->orderId),
             reason: 'Proces objednávky selhal, platba vrácena',
             actorId: CustomerId::fromString(SystemActor::ID),
@@ -339,7 +339,7 @@ final class OrderProcessManager
         $state->transitionTo($status);
         $this->sagaRepository->save($state);
 
-        // Bez tohohle kroku zůstane objednávka zamčená navždy. Ve větvích,
+        // Bez tohoto kroku zůstane objednávka zamčená navždy. Ve větvích,
         // které končí stornem, zámek uvolní rovnou CancelOrderHandler.
         $this->commandBus->dispatch(
             new ReleaseOrderLock(orderId: $state->correlationId()),

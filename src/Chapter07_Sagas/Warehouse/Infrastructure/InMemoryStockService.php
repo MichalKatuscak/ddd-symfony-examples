@@ -25,7 +25,7 @@ final class InMemoryStockService implements StockService
     public function reserve(string $orderId): void
     {
         if ($this->alwaysFails) {
-            throw new \RuntimeException('Zboží není skladem.');
+            throw new \RuntimeException('Out of stock.');
         }
 
         $this->reserved[$orderId] = true;

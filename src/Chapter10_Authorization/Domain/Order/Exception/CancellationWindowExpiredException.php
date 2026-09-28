@@ -16,7 +16,7 @@ final class CancellationWindowExpiredException extends DomainRuleViolation
         public readonly \DateTimeImmutable $attemptedAt,
     ) {
         parent::__construct(sprintf(
-            'Objednávku „%s“ potvrzenou %s už nelze stornovat (pokus %s).',
+            'Order "%s" confirmed at %s can no longer be cancelled (attempted at %s).',
             $orderId->value,
             $placedAt->format('Y-m-d H:i'),
             $attemptedAt->format('Y-m-d H:i'),

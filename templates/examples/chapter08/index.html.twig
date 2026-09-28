@@ -1,15 +1,15 @@
 {% extends 'base.html.twig' %}
-{% block title %}Ukázka: Testování DDD kódu{% endblock %}
+{% block title %}Ukázka: Testování DDD{% endblock %}
 {% block body %}
 <div class="container mt-4">
     <div class="alert alert-info">
         Tato ukázka patří ke kapitole
-        <a href="https://ddd-v-symfony.katuscak.cz/testovani-ddd"><strong>Testování DDD kódu v Symfony</strong></a>
+        <a href="https://ddd-v-symfony.katuscak.cz/testovani-ddd"><strong>Testování DDD</strong></a>
     </div>
     <nav class="mb-3"><a href="{{ path('examples_index') }}">← Zpět na přehled</a></nav>
     <h1>Ukázka: Testování doménového modelu</h1>
-    <p>Doménové třídy se testují bez frameworku a bez databáze. Testy míří na kanonický
-        <code>Order</code> z kapitoly Návrh agregátu a kanonický <code>User</code> z kapitoly Implementace v Symfony.</p>
+    <p>Doménové třídy se testují bez frameworku a bez databáze, repozitář integračně nad skutečnou databází. Testy míří na kanonický
+        <code>Order</code> z kapitoly Návrh agregátu a kanonický <code>User</code> z kapitoly Implementace v Symfony 8.</p>
 
     <h3>Spuštění testů této kapitoly</h3>
     <pre class="bg-dark text-light p-3 rounded">./vendor/bin/phpunit tests/Chapter08 --testdox</pre>
@@ -21,11 +21,13 @@
         <li>Registrace uživatele nahraje právě jednu událost <code>UserRegistered</code>; ta nese primitivy</li>
         <li><code>rename()</code> a <code>changeEmail()</code> se stejnou hodnotou nic nezmění a nic nenahrají</li>
         <li><code>Order</code> vydá události v pořadí <code>OrderPlaced</code> → <code>OrderItemAdded</code> → <code>OrderConfirmed</code></li>
-        <li>Prázdnou objednávku nejde potvrdit (<code>EmptyOrderException</code>), potvrzenou podruhé taky ne
+        <li>Prázdnou objednávku nejde potvrdit (<code>EmptyOrderException</code>), potvrzenou podruhé také ne
             (<code>InvalidOrderStateTransitionException</code>)</li>
         <li>Handler registrace nad fake repozitářem normalizuje e-mail a duplicitní registraci odmítne
             (<code>DuplicateEmailException</code>)</li>
         <li>Test Data Builder <code>OrderBuilder</code> doplní bezpečné výchozí hodnoty</li>
+        <li>Integrační test <code>DoctrineUserRepository</code> nad SQLite v paměti: <code>findByEmail()</code>
+            vidí uživatele až po <code>flush()</code></li>
     </ul>
     <nav class="d-flex justify-content-between mt-5 pt-3 border-top">
         {% if prev_route is defined and prev_route %}

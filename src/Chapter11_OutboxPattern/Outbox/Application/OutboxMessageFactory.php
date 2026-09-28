@@ -30,7 +30,7 @@ final readonly class OutboxMessageFactory
 
         if ($class === null) {
             throw new \RuntimeException(
-                sprintf('Neznámý message_type "%s" v outboxu.', $message->messageType),
+                sprintf('Unknown message_type "%s" in outbox.', $message->messageType),
             );
         }
 

@@ -38,7 +38,7 @@ historická jména, která s ním nesouhlasí; rozhoduje sloupec Kapitola.
 | 13 | [Event Sourcing](https://ddd-v-symfony.katuscak.cz/event-sourcing) – event store, projekce | `src/Chapter06_EventSourcing` | `/examples/event-sourcing` |
 | 14 | [Ságy a Process Managery](https://ddd-v-symfony.katuscak.cz/sagy-a-process-managery) – orchestrace, kompenzace | `src/Chapter07_Sagas` | `/examples/sagy` |
 | 15 | [Outbox Pattern](https://ddd-v-symfony.katuscak.cz/outbox-pattern) – spolehlivé publikování událostí | `src/Chapter11_OutboxPattern` | `/examples/outbox` |
-| 17 | [Testování DDD](https://ddd-v-symfony.katuscak.cz/testovani-ddd) – unit testy domény | `src/Chapter08_Testing` | `/examples/testovani` |
+| 17 | [Testování DDD](https://ddd-v-symfony.katuscak.cz/testovani-ddd) – unit testy domény, integrační test repozitáře | `src/Chapter08_Testing` | `/examples/testovani` |
 | 18 | [Migrace z CRUD na DDD](https://ddd-v-symfony.katuscak.cz/migrace-z-crud) – invarianty místo setterů | `src/Chapter09_Migration` | `/examples/migrace-z-crud` |
 
 Ostatní kapitoly ukázku nemají záměrně. Strategické a procesní kapitoly stojí na
@@ -69,8 +69,15 @@ Ukázky sledují kanonické konvence příručky:
   objekt, čas vzniku ve vlastnosti `occurredAt`.
 - Identifikátory jako hodnotové objekty nad `Uuid::v7()` z `symfony/uid`.
 - `Money` s `amountInCents` a měnou `Currency` jako string-backed enum.
+- Kanonický agregát `final class Order extends AggregateRoot` s továrnou `Order::place()`.
+- Příkazy pro command bus bez přípony (`PlaceOrder`, `CancelOrder`), obsluha s příponou
+  `Handler`. Příponu `Command` nesou jen konzolové příkazy (`OutboxDispatchCommand`).
 - Doménová pravidla jako pojmenované výjimky s továrnami
-  (`InvalidOrderStateTransitionException::cannotTransition()`).
+  (`InvalidOrderStateTransitionException::cannotTransition()`). Hlášky výjimek jsou
+  anglicky. Česky zůstávají texty pro lidi: stránky ukázek, důvody zamítnutí
+  ve Voteru a důvod storna, který je doménovým údajem.
+- Repozitář načítá agregát metodou `get()`, která při absenci hází pojmenovanou
+  `…NotFoundException`. `find…(): ?X` jen tam, kde absence chybou není (`findByEmail()`).
 - Agregáty se odkazují jen přes identitu.
 
 Sdílené třídy leží v `src/Shared/Domain`, v knize v `App\SharedKernel\Domain`.

@@ -17,7 +17,7 @@ use App\Shared\Domain\Money;
  * Plnou verzi (placeWithFirstItem, markPaid, ship, zámek ságy) ukazuje
  * Chapter02_AggregateDesign.
  */
-class Order extends AggregateRoot
+final class Order extends AggregateRoot
 {
     /** @var list<OrderItem> */
     private array $items = [];
@@ -49,7 +49,7 @@ class Order extends AggregateRoot
     {
         if ($this->status !== OrderStatus::Draft) {
             throw InvalidOrderStateTransitionException::notAllowedInState(
-                'přidání položky',
+                'addItem',
                 $this->status->value,
             );
         }
@@ -62,7 +62,7 @@ class Order extends AggregateRoot
     {
         if ($this->status !== OrderStatus::Draft) {
             throw InvalidOrderStateTransitionException::notAllowedInState(
-                'odebrání položky',
+                'removeItem',
                 $this->status->value,
             );
         }

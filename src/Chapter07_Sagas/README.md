@@ -24,7 +24,7 @@ Testy: `./vendor/bin/phpunit tests/Chapter07`
 - `OrderProcessManager` na `event.bus` podle
   [14.05](https://ddd-v-symfony.katuscak.cz/sagy-a-process-managery#process-manager-heading).
   Sám stav objednávky nemění; posílá `MarkOrderPaid`, `ShipOrder`
-  a `CancelOrderCommand`.
+  a `CancelOrder`.
 - Handlery kroků v kontextech Payment, Warehouse a Shipping. Výsledek hlásí
   událostí (`PaymentSucceeded`, `StockReserved`, `ShipmentCreated` a jejich
   protějšky), ne výjimkou. Každá kroková událost nese vlastní `eventId`.
@@ -43,11 +43,16 @@ Testy: `./vendor/bin/phpunit tests/Chapter07`
 - Timeouty: `CheckSagaTimeout` s `DelayStamp` pro stavy `awaiting_payment`
   a `awaiting_stock_reservation`
   ([14.08](https://ddd-v-symfony.katuscak.cz/sagy-a-process-managery#timeouty)).
+- `CheckStaleSagasCommand` (`app:saga:check-stale`) s prahem podle stavu ságy:
+  sklad 5 minut, platba 15 minut, zásilka 26 hodin, kompenzace 30 minut
+  ([14.11](https://ddd-v-symfony.katuscak.cz/sagy-a-process-managery#check-stale-sagas-heading)).
 
 ## Čím se ukázka liší od knihy a proč
 
 **Synchronní sběrnice.** Kniha routuje události a příkazy do transportů
-`async_events` a `async_commands`. Ukázka transporty nemá, takže celý proces
+`async_events` a `async_commands` s oddělenými frontami (`queue_name: events`
+a `commands`) a `command.bus` má middleware `validation` a `doctrine_transaction`.
+Ukázka transporty nemá, takže celý proces
 doběhne v jednom HTTP requestu a jeho výsledek je vidět hned. Důsledek pro
 timeouty: synchronní zpracování `DelayStamp` ignoruje, hlídač se zpracuje
 hned po krocích vyvolaných před ním, zjistí, že sága stav opustila,
@@ -55,10 +60,10 @@ a nic neudělá. Skutečné vypršení ověřuje `CheckSagaTimeoutHandlerTest`.
 
 **Jména sběrnic.** Příkazová sběrnice se v ukázkách jmenuje
 `messenger.bus.command`, ne `command.bus` jako v knize. Konfiguraci
-Messengeru sdílejí všechny kapitoly a jméno z ní přebírá i tahle.
+Messengeru sdílejí všechny kapitoly a jméno z ní přebírá i tato.
 
 **Stav ságy v paměti.** Kniha ukládá `OrderSaga` jako Doctrine entitu
-s `#[ORM\Version]`. Proces tady doběhne synchronně, po restartu workeru není
+s `#[ORM\Version]`. Proces zde doběhne synchronně, po restartu workeru není
 co obnovovat, a tak stav drží `InMemoryOrderSagaRepository`. Unikátní index
 `(saga_type, correlation_id)` napodobuje: druhou ságu pro tutéž objednávku
 odmítne stejnou `UniqueConstraintViolationException`, jakou by vyhodila
@@ -75,9 +80,11 @@ definuje v kapitole [Outbox Pattern](https://ddd-v-symfony.katuscak.cz/outbox-pa
 a ukázka to přebírá z `Chapter11_OutboxPattern`. Roli relaye hraje controller:
 řádek z outboxu pošle na `event.bus`.
 
-**Co ukázka vynechává.** Choreografii (14.03), paralelní kroky (14.10)
-a příkaz pro detekci zaseklých ság (14.11). Repozitář `findStale()` má,
-příkaz nad ním ne.
+**Detekce zaseklých ság nad pamětí.** Příkaz `app:saga:check-stale` je
+v ukázce funkční, ale nový proces začíná s prázdným repozitářem ság, takže
+z konzole nic nenajde. Prahy podle stavu ověřuje `CheckStaleSagasCommandTest`.
+
+**Co ukázka vynechává.** Choreografii (14.03) a paralelní kroky (14.10).
 
 ## Odkaz na příručku
 

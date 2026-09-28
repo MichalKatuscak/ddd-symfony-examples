@@ -65,7 +65,7 @@ final class EmailTest extends TestCase
     public function testImmutabilityViaNewInstance(): void
     {
         $original = new Email('jan@example.com');
-        // Hodnotové objekty jsou immutabilní - změna vyžaduje vytvoření nové instance
+        // Hodnotové objekty jsou neměnné – změna vyžaduje novou instanci
         $different = new Email('petr@example.com');
 
         $this->assertSame('jan@example.com', $original->value);

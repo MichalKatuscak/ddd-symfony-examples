@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Chapter07\Saga;
 
-use App\Chapter07_Sagas\Ordering\Application\Command\CancelOrderCommand;
+use App\Chapter07_Sagas\Ordering\Application\Command\CancelOrder;
 use App\Chapter07_Sagas\Ordering\Application\Command\CheckSagaTimeout;
 use App\Chapter07_Sagas\Ordering\Application\Handler\CheckSagaTimeoutHandler;
 use App\Chapter07_Sagas\Ordering\Application\Saga\OrderSaga;
@@ -37,7 +37,7 @@ final class CheckSagaTimeoutHandlerTest extends TestCase
 
         self::assertSame(OrderSagaStatus::Failed, $this->state()->status());
         self::assertCount(1, $this->commandBus->messages);
-        self::assertInstanceOf(CancelOrderCommand::class, $this->commandBus->messages[0]);
+        self::assertInstanceOf(CancelOrder::class, $this->commandBus->messages[0]);
     }
 
     public function test_stock_timeout_refunds_payment(): void

@@ -11,7 +11,7 @@ final readonly class OrderId
     public function __construct(public string $value)
     {
         if (!Uuid::isValid($value)) {
-            throw new \InvalidArgumentException(sprintf('Neplatné OrderId: „%s“.', $value));
+            throw new \InvalidArgumentException('OrderId must be a valid UUID');
         }
     }
 

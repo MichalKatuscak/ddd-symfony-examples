@@ -47,9 +47,25 @@ final class OutboxDispatchCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $deadline = time() + (int) $input->getOption('time-limit');
+        $backoff = 1; // sekundy čekání při výpadku brokera
 
         while (time() < $deadline) {
             $result = $this->relay->dispatchPending(100);
+
+            if ($result['brokerUnavailable']) {
+                // Výpadek brokera se nepočítá do attempts žádného řádku.
+                // Čeká celý worker: 1 s, 2 s, 4 s … nejvýš 30 s.
+                $output->writeln(sprintf(
+                    '<error>[outbox] broker unavailable, retrying in %d s</error>',
+                    $backoff,
+                ));
+                sleep($backoff);
+                $backoff = min($backoff * 2, 30);
+
+                continue;
+            }
+
+            $backoff = 1;
 
             if ($result['processed'] === 0 && $result['failed'] === 0) {
                 usleep(100_000); // 100 ms polling interval
@@ -58,7 +74,7 @@ final class OutboxDispatchCommand extends Command
             }
 
             $output->writeln(sprintf(
-                '[outbox] publikováno %d, selhání %d',
+                '[outbox] dispatched %d, failed %d',
                 $result['processed'],
                 $result['failed'],
             ));

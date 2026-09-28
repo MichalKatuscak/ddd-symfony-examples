@@ -15,6 +15,6 @@ final class ForbiddenEmailDomainException extends DomainRuleViolation
 {
     public static function forDomain(string $domain): self
     {
-        return new self(sprintf('E-maily z domény „%s“ registrace nepřijímá.', $domain));
+        return new self(sprintf('Registration from domain "%s" is not allowed.', $domain));
     }
 }

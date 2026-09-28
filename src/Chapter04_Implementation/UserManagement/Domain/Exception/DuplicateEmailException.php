@@ -11,7 +11,7 @@ final class DuplicateEmailException extends \DomainException
     public static function with(Email $email, ?\Throwable $previous = null): self
     {
         return new self(
-            sprintf('Uživatel s e-mailem "%s" již existuje.', $email->value),
+            sprintf('User with e-mail "%s" already exists.', $email->value),
             previous: $previous,
         );
     }

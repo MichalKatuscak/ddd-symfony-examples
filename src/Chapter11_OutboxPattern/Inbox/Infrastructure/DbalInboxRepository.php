@@ -6,6 +6,7 @@ namespace App\Chapter11_OutboxPattern\Inbox\Infrastructure;
 
 use App\Chapter11_OutboxPattern\Inbox\Application\InboxRepository;
 use Doctrine\DBAL\Connection;
+use Symfony\Bridge\Doctrine\Types\UuidType;
 use Symfony\Component\Uid\Uuid;
 
 /**
@@ -14,7 +15,7 @@ use Symfony\Component\Uid\Uuid;
  * indexem.
  *
  * Tabulku `inbox` ukázka migrací nezakládá; za běhu stránky používá
- * InMemoryInboxRepository. Tuhle třídu ověřuje test nad SQLite v paměti
+ * InMemoryInboxRepository. Tuto třídu ověřuje test nad SQLite v paměti
  * (tests/Chapter11/Inbox/DbalInboxRepositoryTest.php), včetně DDL.
  */
 final readonly class DbalInboxRepository implements InboxRepository
@@ -25,9 +26,13 @@ final readonly class DbalInboxRepository implements InboxRepository
 
     public function isProcessed(Uuid $eventId, string $consumer): bool
     {
+        // Typ 'uuid' převede hodnotu na tvar platformy: BINARY(16) v MySQL,
+        // BLOB v SQLite, nativní UUID v PostgreSQL. Holý řetězec by se
+        // s uloženou hodnotou nikdy neshodoval a každá zpráva by prošla jako nová.
         return (bool) $this->connection->fetchOne(
             'SELECT 1 FROM inbox WHERE event_id = :id AND consumer = :consumer',
-            ['id' => (string) $eventId, 'consumer' => $consumer],
+            ['id' => $eventId, 'consumer' => $consumer],
+            ['id' => UuidType::NAME],
         );
     }
 
@@ -39,10 +44,15 @@ final readonly class DbalInboxRepository implements InboxRepository
         // isProcessed(). Spolknutá výjimka by na MySQL nechala commitnout
         // i duplicitní efekt a UNIQUE by přestal být pojistkou.
         $this->connection->insert('inbox', [
-            'id'           => (string) Uuid::v7(),
-            'event_id'     => (string) $eventId,
+            // InboxMessage má vlastní PK bez #[ORM\GeneratedValue],
+            // takže ho musí dodat zapisující strana.
+            'id'           => Uuid::v7(),
+            'event_id'     => $eventId,
             'consumer'     => $consumer,
             'processed_at' => (new \DateTimeImmutable())->format('Y-m-d H:i:s'),
+        ], [
+            'id'       => UuidType::NAME,
+            'event_id' => UuidType::NAME,
         ]);
     }
 }

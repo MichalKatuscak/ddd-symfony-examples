@@ -10,6 +10,6 @@ final class OrderNotFoundException extends DomainRuleViolation
 {
     public static function withId(string $orderId): self
     {
-        return new self(sprintf('Objednávka „%s“ neexistuje.', $orderId));
+        return new self(sprintf('Order "%s" not found.', $orderId));
     }
 }

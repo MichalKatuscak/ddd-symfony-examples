@@ -62,18 +62,16 @@ final class Chapter11Controller extends AbstractController
             if ($brokerDown) {
                 $this->publisher->simulateOutage();
                 $result = $this->relay->dispatchPending();
-                $log[] = sprintf('OutboxRelay: broker nedostupný – publikováno %d, selhání %d', $result['processed'], $result['failed']);
-                $stages[] = $this->snapshot('Po výpadku brokera (řádek zůstává pending s odkladem)');
+                $log[] = sprintf(
+                    'OutboxRelay: broker nedostupný (TransportException) – publikováno %d, průchod přerušen, pokus se řádku nepočítá',
+                    $result['processed'],
+                );
+                $stages[] = $this->snapshot('Po výpadku brokera (řádek zůstává pending, attempts beze změny)');
 
+                // Worker by teď čekal s backoffem 1 s, 2 s, 4 s … Ukázka nečeká,
+                // broker rovnou „naskočí“.
                 $this->publisher->simulateOutage(false);
-                $result = $this->relay->dispatchPending();
-                $log[] = sprintf('OutboxRelay hned znovu: publikováno %d – odklad ještě neuplynul, řádek se přeskočí', $result['processed']);
-
-                // Ukázka nečeká dvě sekundy; čas dalšího pokusu posune ručně.
-                foreach ($this->outbox->all() as $message) {
-                    $message->availableAt = new \DateTimeImmutable('-1 second');
-                }
-                $log[] = 'Uplynul odklad (v ukázce posunut ručně)';
+                $log[] = 'Worker po backoffu zkouší znovu (v ukázce bez čekání), broker už odpovídá';
             }
 
             // 3) Relay publikuje pending řádky a označí je jako sent.

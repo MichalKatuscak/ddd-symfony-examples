@@ -28,7 +28,7 @@ final class OrderBuilder
 
     private function __construct()
     {
-        // Bezpečné výchozí hodnoty - test nastavuje jen to, na čem mu skutečně záleží
+        // Bezpečné výchozí hodnoty – test nastavuje jen to, na čem mu záleží
         $this->orderId    = OrderId::generate();
         $this->customerId = CustomerId::generate();
     }

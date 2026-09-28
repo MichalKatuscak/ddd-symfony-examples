@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Chapter07\Integration;
 
-use App\Chapter07_Sagas\Ordering\Application\Command\CancelOrderCommand;
+use App\Chapter07_Sagas\Ordering\Application\Command\CancelOrder;
 use App\Chapter07_Sagas\Ordering\Application\Command\CheckSagaTimeout;
 use App\Chapter07_Sagas\Ordering\Application\Command\MarkOrderPaid;
 use App\Chapter07_Sagas\Ordering\Application\Command\ReleaseOrderLock;
@@ -46,7 +46,7 @@ use App\Chapter11_OutboxPattern\Ordering\Domain\Event\OrderCancelled;
 use App\Chapter11_OutboxPattern\Ordering\Domain\ValueObject\OrderId;
 use App\Chapter11_OutboxPattern\Ordering\Domain\ValueObject\OrderStatus;
 use App\Chapter11_OutboxPattern\Ordering\Infrastructure\InMemoryOrderRepository;
-use App\Chapter11_OutboxPattern\Outbox\Application\DomainEventSerializer;
+use App\Chapter11_OutboxPattern\Outbox\Application\IntegrationEventSerializer;
 use App\Chapter11_OutboxPattern\Outbox\Application\OutboxMessageFactory;
 use App\Chapter11_OutboxPattern\Outbox\Infrastructure\InMemoryOutboxRepository;
 use App\Tests\Chapter11\TestSerializer;
@@ -97,7 +97,7 @@ final class OrderSagaFlowTest extends TestCase
             CancelShipment::class => [new CancelShipmentHandler($shipping)],
             MarkOrderPaid::class => [new MarkOrderPaidHandler($this->orders, $eventBus)],
             ShipOrder::class => [new ShipOrderHandler($this->orders, $eventBus)],
-            CancelOrderCommand::class => [new CancelOrderHandler($this->orders, $eventBus)],
+            CancelOrder::class => [new CancelOrderHandler($this->orders, $eventBus)],
             ReleaseOrderLock::class => [new ReleaseOrderLockHandler($this->orders)],
             CheckSagaTimeout::class => [new CheckSagaTimeoutHandler($this->sagas, $commandBus)],
         ]))]);
@@ -117,7 +117,7 @@ final class OrderSagaFlowTest extends TestCase
         $serializer = TestSerializer::create();
         $this->outbox = new InMemoryOutboxRepository();
         $this->outboxFactory = new OutboxMessageFactory($serializer);
-        $this->placeOrder = new PlaceOrderHandler($this->orders, $this->outbox, new DomainEventSerializer($serializer));
+        $this->placeOrder = new PlaceOrderHandler($this->orders, $this->outbox, new IntegrationEventSerializer($serializer), $eventBus);
     }
 
     public function test_happy_path_ships_order_and_releases_lock(): void

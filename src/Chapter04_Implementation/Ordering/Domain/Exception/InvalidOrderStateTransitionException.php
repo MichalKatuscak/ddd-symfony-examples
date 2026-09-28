@@ -12,17 +12,17 @@ final class InvalidOrderStateTransitionException extends \DomainException
     public static function cannotTransition(string $from, string $to): self
     {
         return new self(sprintf(
-            'Nelze přejít ze stavu „%s“ do stavu „%s“.',
+            'Cannot transition from "%s" to "%s".',
             $from,
             $to,
         ));
     }
 
-    /** Ne každé porušení je přechod – přidání položky mimo Draft taky ne. */
+    /** Ne každé porušení je přechod – přidání položky mimo Draft také ne. */
     public static function notAllowedInState(string $operation, string $state): self
     {
         return new self(sprintf(
-            'Operaci „%s“ nelze provést ve stavu „%s“.',
+            'Operation "%s" is not allowed in state "%s".',
             $operation,
             $state,
         ));

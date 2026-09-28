@@ -22,7 +22,7 @@ final class OrderItem
         public readonly Money $unitPrice,
     ) {
         if ($quantity <= 0) {
-            throw new \InvalidArgumentException('Množství musí být kladné.');
+            throw new \InvalidArgumentException('Quantity must be positive');
         }
     }
 
@@ -30,7 +30,7 @@ final class OrderItem
     public function increaseQuantity(int $by): void
     {
         if ($by < 1) {
-            throw new \InvalidArgumentException('Množství lze zvýšit jen o kladné číslo.');
+            throw new \InvalidArgumentException('Quantity increment must be positive');
         }
 
         $this->quantity += $by;

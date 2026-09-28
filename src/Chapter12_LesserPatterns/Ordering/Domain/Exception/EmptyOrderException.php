@@ -8,6 +8,6 @@ final class EmptyOrderException extends \DomainException
 {
     public static function cannotBePlaced(): self
     {
-        return new self('Objednávka musí mít alespoň jednu položku.');
+        return new self('Order must contain at least one item.');
     }
 }

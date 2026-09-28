@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Chapter07_Sagas\Ordering\Application\Handler;
 
-use App\Chapter07_Sagas\Ordering\Application\Command\CancelOrderCommand;
+use App\Chapter07_Sagas\Ordering\Application\Command\CancelOrder;
 use App\Chapter07_Sagas\Ordering\Application\Exception\AccessDeniedDomainException;
 use App\Chapter07_Sagas\SharedKernel\Domain\SystemActor;
 use App\Chapter11_OutboxPattern\Ordering\Domain\Repository\OrderRepository;
@@ -14,7 +14,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 
 /**
  * Asynchronní varianta z kapitoly o autorizaci. Pro ságu je nutná právě
- * tahle: musí rozpoznat systémovou identitu a uvolnit zámek, jinak
+ * tato: musí rozpoznat systémovou identitu a uvolnit zámek, jinak
  * kompenzace narazí na OrderLockedBySagaException.
  */
 #[AsMessageHandler(bus: 'messenger.bus.command')]
@@ -26,7 +26,7 @@ final readonly class CancelOrderHandler
         private MessageBusInterface $eventBus,
     ) {}
 
-    public function __invoke(CancelOrderCommand $command): void
+    public function __invoke(CancelOrder $command): void
     {
         $order = $this->orders->get($command->orderId);
 

@@ -9,7 +9,7 @@ final readonly class VerificationToken
     private function __construct(public string $value)
     {
         if ($value === '') {
-            throw new \InvalidArgumentException('Ověřovací token nesmí být prázdný.');
+            throw new \InvalidArgumentException('Verification token must not be empty.');
         }
     }
 

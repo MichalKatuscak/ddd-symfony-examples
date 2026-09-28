@@ -11,6 +11,10 @@ use App\Chapter10_Authorization\Domain\Order\Order;
 use App\Shared\Domain\Currency;
 use App\Shared\Domain\Money;
 
+/**
+ * Object Mother z kapitoly (11.10): pojmenované statické metody vracejí
+ * hotové scénáře. S Foundry továrnou stejného jména nemá nic společného.
+ */
 final class OrderFactory
 {
     private const AT = '2026-04-29 10:00:00';
@@ -39,7 +43,7 @@ final class OrderFactory
     }
 
     /**
-     * Builder jde přes veřejné API agregátu, ne přes reflexi. Konstruktor
+     * Továrna jde přes veřejné API agregátu, ne přes reflexi. Konstruktor
      * je privátní a stav se mění jen přechody – kdyby si test sahal dovnitř,
      * přestal by hlídat právě ta pravidla, kvůli kterým existuje.
      */

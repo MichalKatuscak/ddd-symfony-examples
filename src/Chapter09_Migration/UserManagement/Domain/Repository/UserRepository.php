@@ -17,6 +17,6 @@ interface UserRepository
 
     public function findByEmail(Email $email): ?User;
 
-    /** @return User[] */
-    public function findActiveUsers(): array;
+    // Seznamové dotazy (například aktivní uživatelé) sem nepatří:
+    // obsluhuje je read model z kroku 4 migrace.
 }

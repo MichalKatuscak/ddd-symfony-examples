@@ -8,7 +8,7 @@ use App\Chapter11_OutboxPattern\Inbox\Infrastructure\InMemoryInboxRepository;
 use App\Chapter11_OutboxPattern\Ordering\Application\Command\PlaceOrder;
 use App\Chapter11_OutboxPattern\Ordering\Application\Handler\PlaceOrderHandler;
 use App\Chapter11_OutboxPattern\Ordering\Infrastructure\InMemoryOrderRepository;
-use App\Chapter11_OutboxPattern\Outbox\Application\DomainEventSerializer;
+use App\Chapter11_OutboxPattern\Outbox\Application\IntegrationEventSerializer;
 use App\Chapter11_OutboxPattern\Outbox\Application\OutboxMessageFactory;
 use App\Chapter11_OutboxPattern\Outbox\Application\OutboxRelay;
 use App\Chapter11_OutboxPattern\Outbox\Domain\OutboxMessage;
@@ -16,6 +16,7 @@ use App\Chapter11_OutboxPattern\Outbox\Infrastructure\InMemoryOutboxRepository;
 use App\Chapter11_OutboxPattern\Outbox\Infrastructure\InProcessPublisher;
 use App\Chapter11_OutboxPattern\Reporting\Application\Subscriber\OrderPlacedReadModelUpdater;
 use App\Chapter11_OutboxPattern\Reporting\Infrastructure\InMemoryReadModelStore;
+use App\Tests\Chapter11\SpyEventBus;
 use App\Tests\Chapter11\TestSerializer;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Uid\Uuid;
@@ -41,7 +42,8 @@ final class OutboxRelayTest extends TestCase
         $this->placeOrder = new PlaceOrderHandler(
             new InMemoryOrderRepository(),
             $this->outbox,
-            new DomainEventSerializer($serializer),
+            new IntegrationEventSerializer($serializer),
+            new SpyEventBus(),
         );
     }
 
@@ -51,33 +53,51 @@ final class OutboxRelayTest extends TestCase
 
         $result = $this->relay->dispatchPending();
 
-        self::assertSame(['processed' => 1, 'failed' => 0], $result);
+        self::assertSame(['processed' => 1, 'failed' => 0, 'brokerUnavailable' => false], $result);
         self::assertSame('sent', $this->outbox->all()[0]->status);
         self::assertNotNull($this->outbox->all()[0]->sentAt);
         // Payload prošel serializací tam i zpět a subscriber ho zapsal.
         self::assertSame(1, $this->readModel->find($orderId)['writes'] ?? null);
     }
 
-    public function test_broker_outage_leaves_row_pending_with_backoff(): void
+    public function test_broker_outage_is_not_counted_as_attempt(): void
     {
+        $this->placeOrder();
         $this->placeOrder();
         $this->publisher->simulateOutage();
 
         $result = $this->relay->dispatchPending();
 
-        self::assertSame(['processed' => 0, 'failed' => 1], $result);
-        $row = $this->outbox->all()[0];
-        self::assertSame('pending', $row->status, 'Výpadek brokera řádek neodepíše.');
-        self::assertSame(1, $row->attempts);
-        self::assertStringContainsString('nedostupný', (string) $row->lastError);
+        // Průchod se přeruší u prvního řádku; výpadek brokera za zprávu nemůže.
+        self::assertSame(['processed' => 0, 'failed' => 0, 'brokerUnavailable' => true], $result);
+        foreach ($this->outbox->all() as $row) {
+            self::assertSame('pending', $row->status, 'Výpadek brokera řádek neodepíše.');
+            self::assertSame(0, $row->attempts);
+            self::assertNull($row->lastError);
+        }
 
-        // Odklad ještě neuplynul: další průchod řádek nevezme, ani když broker naskočí.
+        // Broker naskočí: řádky nemají odklad, další průchod je rovnou publikuje.
         $this->publisher->simulateOutage(false);
-        self::assertSame(['processed' => 0, 'failed' => 0], $this->relay->dispatchPending());
+        self::assertSame(['processed' => 2, 'failed' => 0, 'brokerUnavailable' => false], $this->relay->dispatchPending());
+    }
 
-        $row->availableAt = new \DateTimeImmutable('-1 second');
-        self::assertSame(['processed' => 1, 'failed' => 0], $this->relay->dispatchPending());
-        self::assertSame('sent', $row->status);
+    public function test_failing_message_is_counted_and_postponed(): void
+    {
+        $this->outbox->store(new OutboxMessage(
+            id: Uuid::v7(),
+            messageType: \stdClass::class,
+            aggregateType: 'Order',
+            aggregateId: (string) Uuid::v7(),
+            payload: [],
+        ));
+
+        self::assertSame(['processed' => 0, 'failed' => 1, 'brokerUnavailable' => false], $this->relay->dispatchPending());
+        $row = $this->outbox->all()[0];
+        self::assertSame('pending', $row->status);
+        self::assertSame(1, $row->attempts);
+
+        // Odklad ještě neuplynul: další průchod řádek nevezme.
+        self::assertSame(['processed' => 0, 'failed' => 0, 'brokerUnavailable' => false], $this->relay->dispatchPending());
     }
 
     public function test_redelivery_after_crash_before_mark_sent_is_absorbed_by_inbox(): void
@@ -90,7 +110,7 @@ final class OutboxRelayTest extends TestCase
         $row->status = 'pending';
         $row->sentAt = null;
 
-        self::assertSame(['processed' => 1, 'failed' => 0], $this->relay->dispatchPending());
+        self::assertSame(['processed' => 1, 'failed' => 0, 'brokerUnavailable' => false], $this->relay->dispatchPending());
         self::assertSame(1, $this->readModel->find($orderId)['writes'] ?? null);
     }
 
@@ -104,8 +124,8 @@ final class OutboxRelayTest extends TestCase
             payload: [],
         ));
 
-        self::assertSame(['processed' => 0, 'failed' => 1], $this->relay->dispatchPending());
-        self::assertStringContainsString('Neznámý message_type', (string) $this->outbox->all()[0]->lastError);
+        self::assertSame(['processed' => 0, 'failed' => 1, 'brokerUnavailable' => false], $this->relay->dispatchPending());
+        self::assertStringContainsString('Unknown message_type', (string) $this->outbox->all()[0]->lastError);
     }
 
     private function placeOrder(): string

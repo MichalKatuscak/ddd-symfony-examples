@@ -12,7 +12,7 @@ final class InsufficientFunds extends \DomainException
     public static function onAccount(AccountId $accountId, Money $amount): self
     {
         return new self(sprintf(
-            'Na účtu „%s“ nejsou prostředky na výběr %d %s (v haléřích).',
+            'Account "%s" has insufficient funds to withdraw %d %s (in minor units).',
             $accountId->value,
             $amount->amountInCents,
             $amount->currency->value,

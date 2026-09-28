@@ -79,7 +79,7 @@ final class Order extends AggregateRoot
     {
         if ($this->status !== OrderStatus::Draft) {
             throw InvalidOrderStateTransitionException::notAllowedInState(
-                'přidání položky',
+                'addItem',
                 $this->status->value,
             );
         }

@@ -17,7 +17,7 @@ class OrderItem
         public readonly Money $unitPrice,
     ) {
         if ($quantity <= 0) {
-            throw new \InvalidArgumentException('Množství musí být kladné.');
+            throw new \InvalidArgumentException('Quantity must be positive');
         }
     }
 }

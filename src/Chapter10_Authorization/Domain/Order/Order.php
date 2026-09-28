@@ -82,7 +82,7 @@ final class Order extends AggregateRoot
     {
         if ($this->status !== OrderStatus::Draft) {
             throw InvalidOrderStateTransitionException::notAllowedInState(
-                'přidání položky',
+                'addItem',
                 $this->status->value,
             );
         }
@@ -187,7 +187,7 @@ final class Order extends AggregateRoot
         }
 
         // Lhůta běží od potvrzení. Draft ji ještě nemá a rozpracovaný
-        // košík taky nikdo neruší na čas.
+        // košík také nikdo neruší na čas.
         if ($this->placedAt !== null) {
             $age = $when->getTimestamp() - $this->placedAt->getTimestamp();
 
@@ -211,7 +211,7 @@ final class Order extends AggregateRoot
 
     public function isCancellable(\DateTimeImmutable $now): bool
     {
-        // Šablona se ptá právě téhle metody, takže musí znát i zámek.
+        // Šablona se ptá právě této metody, takže musí znát i zámek.
         // Jinak nabídne tlačítko, jehož příkaz skončí v dead-letter frontě.
         if ($this->sagaInProgress) {
             return false;

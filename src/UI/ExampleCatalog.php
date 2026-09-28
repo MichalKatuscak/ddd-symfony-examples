@@ -31,7 +31,7 @@ final class ExampleCatalog
             ['num' => '13', 'title' => 'Event Sourcing', 'desc' => 'Event store s verzí streamu, rekonstrukce agregátu a projekce', 'book_path' => '/event-sourcing', 'dir' => 'Chapter06_EventSourcing', 'tests' => 'tests/Chapter06', 'route' => 'chapter06'],
             ['num' => '14', 'title' => 'Ságy a Process Managery', 'desc' => 'Orchestrovaná sága a kompenzační kroky', 'book_path' => '/sagy-a-process-managery', 'dir' => 'Chapter07_Sagas', 'tests' => 'tests/Chapter07', 'route' => 'chapter07'],
             ['num' => '15', 'title' => 'Outbox Pattern', 'desc' => 'Transactional Outbox, relay a idempotentní inbox', 'book_path' => '/outbox-pattern', 'dir' => 'Chapter11_OutboxPattern', 'tests' => 'tests/Chapter11', 'route' => 'chapter11'],
-            ['num' => '17', 'title' => 'Testování DDD', 'desc' => 'Unit testy doménového modelu bez frameworku a databáze', 'book_path' => '/testovani-ddd', 'dir' => 'Chapter08_Testing', 'tests' => 'tests/Chapter08', 'route' => 'chapter08'],
+            ['num' => '17', 'title' => 'Testování DDD', 'desc' => 'Unit testy doménového modelu a integrační test repozitáře', 'book_path' => '/testovani-ddd', 'dir' => 'Chapter08_Testing', 'tests' => 'tests/Chapter08', 'route' => 'chapter08'],
             ['num' => '18', 'title' => 'Migrace z CRUD na DDD', 'desc' => 'Invarianty místo setterů: User před migrací a po ní', 'book_path' => '/migrace-z-crud', 'dir' => 'Chapter09_Migration', 'tests' => 'tests/Chapter09', 'route' => 'chapter09'],
         ];
     }
